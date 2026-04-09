@@ -19,7 +19,7 @@ export default defineConfig({
           build: {
             outDir: path.resolve(__dirname, 'dist/main'),
             rollupOptions: {
-              external: ['better-sqlite3', 'pdfjs-dist'],
+              external: ['better-sqlite3', /^pdfjs-dist/],
             },
           },
         },
