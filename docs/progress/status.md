@@ -16,16 +16,25 @@ Last updated: 2026-04-09
 - [x] Preload bridge (window.api)
 - [x] All renderer pages (Onboarding, PlacementTest, Dashboard, Chapter, Exercise, Progress)
 - [x] Tailwind CSS setup
+- [x] `npm install` — all dependencies installed
+- [x] `tailwind.config.js` + `postcss.config.js` setup
+- [x] Design system: Cyan+Green (light) / Mono+Blue (dark) palettes
+- [x] Dark mode toggle (persisted to settings)
+- [x] Fonts: Poppins + Open Sans via Google Fonts
+- [x] vite-plugin-electron for unified dev/build
+- [x] Fix ELECTRON_RUN_AS_NODE breaking main process
+- [x] Fix pdfjs-dist ESM/worker compatibility
+- [x] electron-rebuild for better-sqlite3
+- [x] Seed static exercises for units 1–20 (80 exercises)
+- [x] .claude/settings.json + skills
 
 ### TODO
-- [ ] `npm install` — install all dependencies
 - [ ] Test PDF import with actual Murphy Blue PDF
-- [ ] Seed static exercises for first 10–20 units
-- [ ] `tailwind.config.js` setup
-- [ ] `postcss.config.js` setup
 - [ ] Test full onboarding flow (placement → import → dashboard)
 - [ ] Test exercise scoring and progress tracking
+- [ ] Seed exercises for units 21–50
 - [ ] App icon (assets/icon.icns, assets/icon.ico)
+- [ ] Push to GitHub + GitLab
 
 ## Phase 2 — AI Layer
 - [ ] Claude API integration (explanation + exercise generation)
