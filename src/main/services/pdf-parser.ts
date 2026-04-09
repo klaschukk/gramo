@@ -30,8 +30,8 @@ export async function parseMurphyPdf(filePath: string): Promise<ParsedPdf> {
   const loadingTask = pdfjs.getDocument(filePath)
   const doc = await loadingTask.promise
 
-  const fullText = await extractFullText(doc)
-  const chapters = splitIntoUnits(fullText)
+  const pages = await extractPages(doc)
+  const chapters = buildChapters(pages)
 
   return {
     title: 'English Grammar in Use',
@@ -40,83 +40,101 @@ export async function parseMurphyPdf(filePath: string): Promise<ParsedPdf> {
   }
 }
 
-async function extractFullText(doc: import('pdfjs-dist').PDFDocumentProxy): Promise<string> {
+async function extractPages(doc: import('pdfjs-dist').PDFDocumentProxy): Promise<string[]> {
   const pages: string[] = []
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i)
     const content = await page.getTextContent()
-    const pageText = content.items
+    const text = content.items
       .map((item) => ('str' in item ? item.str : ''))
       .join(' ')
-    pages.push(pageText)
+    pages.push(text)
   }
-  return pages.join('\n')
+  return pages
 }
 
-function splitIntoUnits(
-  fullText: string
-): Omit<Chapter, 'id' | 'bookId' | 'createdAt'>[] {
-  // Match only unit headers at the start of a line/section, not inline references.
-  // Murphy Blue format: "Unit 1 " followed by a title (capitalized).
-  // Avoid matching "Unit 19 A" inside body text or cross-references like "→ Unit 3".
-  const unitPattern = /(?:^|\n)\s*Unit\s+(\d{1,3})\s+([A-Z][^\n]{3,80})/g
-  const allMatches = [...fullText.matchAll(unitPattern)]
+function buildChapters(pages: string[]): Omit<Chapter, 'id' | 'bookId' | 'createdAt'>[] {
+  // Murphy Blue: each unit = 2 pages (lesson + exercises).
+  // Find first occurrence of each "Unit N" across all pages.
+  // Skip exercise pages and cross-references.
+  const chapters = new Map<number, { title: string; rawText: string }>()
 
-  // Deduplicate: keep only the first occurrence of each unit number
-  const seen = new Set<number>()
-  const matches = allMatches.filter((m) => {
-    const num = parseInt(m[1], 10)
-    if (num < 1 || num > 145) return false
-    if (seen.has(num)) return false
-    seen.add(num)
-    return true
-  })
+  for (const text of pages) {
+    const matches = [...text.matchAll(/Unit\s+(\d{1,3})\b/g)]
+    if (matches.length === 0) continue
 
-  const chapters: Omit<Chapter, 'id' | 'bookId' | 'createdAt'>[] = []
+    for (const match of matches) {
+      const unitNumber = parseInt(match[1], 10)
+      if (unitNumber < 1 || unitNumber > 145 || chapters.has(unitNumber)) continue
 
-  for (let i = 0; i < matches.length; i++) {
-    const match = matches[i]
-    const unitNumber = parseInt(match[1], 10)
-    const title = match[2].trim()
+      const pos = match.index ?? 0
 
-    const start = match.index ?? 0
-    const end = matches[i + 1]?.index ?? fullText.length
-    const rawText = fullText.slice(start, end).trim()
+      // Skip exercise pages: "Exercises" + "N.1" pattern early
+      const exercisePattern = new RegExp(`\\b${unitNumber}\\.1\\b`)
+      const isExercisePage = exercisePattern.test(text.slice(0, 200))
+      if (isExercisePage && text.slice(0, 50).includes('Exercises')) continue
+      if (isExercisePage && !text.slice(0, 50).includes('Unit')) continue
 
-    // Clean up raw text: collapse multiple spaces, trim lines
-    const cleanText = formatRawText(rawText)
+      // Skip cross-references: "➜ Unit N", "Units N-M"
+      const before = text.slice(Math.max(0, pos - 15), pos)
+      if (/[➜→]\s*$/.test(before)) continue
+      if (/Units\s+$/.test(before)) continue
 
-    chapters.push({
+      // Extract title from text before "Unit N"
+      let title = text.slice(0, pos).trim()
+      title = title.replace(/^[A-D]\s+/, '').replace(/[➜→].*$/, '').trim()
+      title = title.replace(/Unit\s+\d+.*$/, '').trim()
+
+      if (title.length < 3) {
+        const after = text.slice(pos + match[0].length, pos + match[0].length + 200)
+        const m = after.match(/^\s*(.{5,80}?)(?:\s{3,}|\.\s|$)/)
+        title = m ? m[1].trim() : `Unit ${unitNumber}`
+      }
+
+      title = title.replace(/\s+/g, ' ').trim().slice(0, 80)
+
+      const rawText = text.slice(pos + match[0].length).trim()
+      chapters.set(unitNumber, { title, rawText: formatRawText(rawText) })
+      break
+    }
+  }
+
+  // Unit 3 special case: shares page 18 with Unit 11 reference
+  // If Unit 3 is missing, try to find it more aggressively
+  if (!chapters.has(3)) {
+    for (const text of pages) {
+      const m = text.match(/Present continuous and present simple 1.*?Unit\s+3\b/i)
+      if (m) {
+        const after = text.slice((m.index ?? 0) + m[0].length).trim()
+        chapters.set(3, {
+          title: 'Present continuous and present simple 1 (I am doing and I do)',
+          rawText: formatRawText(after),
+        })
+        break
+      }
+    }
+  }
+
+  const result: Omit<Chapter, 'id' | 'bookId' | 'createdAt'>[] = []
+  for (const [unitNumber, data] of chapters) {
+    result.push({
       unitNumber,
-      title: cleanTitle(title),
-      topic: cleanTitle(title),
+      title: data.title,
+      topic: data.title,
       cefrLevel: getCEFRForUnit(unitNumber),
-      rawText: cleanText,
+      rawText: data.rawText,
       notes: null,
     })
   }
 
-  // Sort by unit number
-  chapters.sort((a, b) => a.unitNumber - b.unitNumber)
-
-  return chapters
-}
-
-function cleanTitle(title: string): string {
-  return title
-    .replace(/\s+/g, ' ')
-    .replace(/[^\w\s''(),/&-]/g, '')
-    .trim()
-    .slice(0, 100)
+  result.sort((a, b) => a.unitNumber - b.unitNumber)
+  return result
 }
 
 function formatRawText(raw: string): string {
   return raw
-    // Collapse 3+ spaces into paragraph break
     .replace(/ {3,}/g, '\n\n')
-    // Collapse multiple newlines
     .replace(/\n{3,}/g, '\n\n')
-    // Trim each line
     .split('\n')
     .map((line) => line.trim())
     .join('\n')
