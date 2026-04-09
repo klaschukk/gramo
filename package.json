@@ -15,7 +15,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "better-sqlite3": "^12.8.0",
-    "pdfjs-dist": "^4.0.379",
+    "pdfjs-dist": "^3.11.174",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
