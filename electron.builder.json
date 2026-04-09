@@ -1,0 +1,52 @@
+{
+  "appId": "com.klaschuk.gramo",
+  "productName": "Gramo",
+  "copyright": "Copyright © 2026 klaschuk",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "node_modules/**/*",
+    "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+    "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+    "!node_modules/.bin"
+  ],
+  "extraResources": [
+    {
+      "from": "data",
+      "to": "data",
+      "filter": ["**/*", "!*.db"]
+    }
+  ],
+  "mac": {
+    "category": "public.app-category.education",
+    "icon": "assets/icon.icns",
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ]
+  },
+  "win": {
+    "icon": "assets/icon.ico",
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "dmg": {
+    "title": "Gramo",
+    "contents": [
+      { "x": 410, "y": 150, "type": "link", "path": "/Applications" },
+      { "x": 130, "y": 150, "type": "file" }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  }
+}
