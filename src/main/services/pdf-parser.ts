@@ -28,7 +28,8 @@ export interface ParsedPdf {
 }
 
 export async function parseMurphyPdf(filePath: string): Promise<ParsedPdf> {
-  const pdfjs = (await import('pdfjs-dist')) as typeof PdfjsType
+  // Use legacy build — pdfjs-dist v4 main requires Node 22+, Electron 29 ships Node 20
+  const pdfjs = (await import('pdfjs-dist/legacy/build/pdf.mjs')) as typeof PdfjsType
   const loadingTask = pdfjs.getDocument({ url: filePath, useWorkerFetch: false })
   const doc = await loadingTask.promise
 
