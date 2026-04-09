@@ -28,8 +28,8 @@ export default function Chapter({ chapterId, onBack }: Props) {
 
   if (loading || !chapter) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-gray-400 text-sm">Loading...</p>
+      <div className="flex h-screen items-center justify-center bg-[--color-bg]">
+        <p className="text-[--color-text-muted] text-sm">Loading...</p>
       </div>
     )
   }
@@ -46,52 +46,55 @@ export default function Chapter({ chapterId, onBack }: Props) {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="flex h-screen flex-col bg-[--color-bg]">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-gray-100">
+      <header className="px-6 py-4 border-b border-[--color-border] bg-[--color-card]">
         <button
+          type="button"
           onClick={onBack}
-          className="text-sm text-gray-400 hover:text-gray-600 mb-2 flex items-center gap-1"
+          className="text-sm text-[--color-text-muted] hover:text-[--color-text] mb-2 flex items-center gap-1 cursor-pointer"
         >
-          ← Back
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
         </button>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-gray-400">Unit {chapter.unitNumber}</span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+          <span className="text-xs font-medium text-[--color-text-faint]">Unit {chapter.unitNumber}</span>
+          <span className="text-xs bg-[--color-level-bg] text-[--color-level-text] px-2 py-0.5 rounded">
             {chapter.cefrLevel}
           </span>
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mt-1">{chapter.title}</h1>
+        <h1 className="text-xl font-heading font-bold text-[--color-text] mt-1">{chapter.title}</h1>
       </header>
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto px-6 py-4">
         <div className="max-w-2xl mx-auto">
-          {/* Grammar explanation (raw text from PDF) */}
-          <div className="prose prose-sm max-w-none">
-            <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans leading-relaxed">
+          <div className="bg-[--color-card] border border-[--color-border] rounded-lg p-6">
+            <pre className="whitespace-pre-wrap text-sm text-[--color-text] font-body leading-relaxed">
               {chapter.rawText}
             </pre>
           </div>
 
-          {/* Notes (if any) */}
           {chapter.notes && (
-            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h3 className="text-sm font-semibold text-yellow-800 mb-2">Notes</h3>
-              <p className="text-sm text-yellow-700">{chapter.notes}</p>
+            <div className="mt-6 p-4 bg-[--color-success-bg] border border-[--color-accent] rounded-lg">
+              <h3 className="text-sm font-heading font-semibold text-[--color-accent] mb-2">Notes</h3>
+              <p className="text-sm text-[--color-text]">{chapter.notes}</p>
             </div>
           )}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="px-6 py-4 border-t border-gray-100">
+      <footer className="px-6 py-4 border-t border-[--color-border] bg-[--color-card]">
         <div className="max-w-2xl mx-auto">
           <button
+            type="button"
             onClick={() => setView('exercises')}
             disabled={exercises.length === 0}
-            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium
-                       hover:bg-blue-700 transition-colors disabled:opacity-40"
+            className="w-full bg-[--color-primary] text-white py-3 px-6 rounded-lg font-heading font-semibold
+                       hover:bg-[--color-primary-light] transition-colors disabled:opacity-40 cursor-pointer"
           >
             {exercises.length > 0
               ? `Practice (${exercises.length} exercises)`

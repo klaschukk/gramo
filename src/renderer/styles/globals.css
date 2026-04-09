@@ -1,13 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  /* Light mode (Cyan + Green) */
+  :root {
+    --color-bg: #ECFEFF;
+    --color-card: #FFFFFF;
+    --color-muted: #F0FDFA;
+    --color-border: #CFFAFE;
+    --color-border-hover: #67E8F9;
+    --color-primary: #0891B2;
+    --color-primary-light: #22D3EE;
+    --color-accent: #059669;
+    --color-accent-light: #34D399;
+    --color-text: #164E63;
+    --color-text-muted: #5E8A97;
+    --color-text-faint: #A0C4CE;
+    --color-success: #059669;
+    --color-success-bg: #ECFDF5;
+    --color-error: #DC2626;
+    --color-error-bg: #FEF2F2;
+    --color-progress: #0891B2;
+    --color-progress-bg: #CFFAFE;
+    --color-level-bg: #CFFAFE;
+    --color-level-text: #0891B2;
+  }
+
+  /* Dark mode (Mono + Blue) */
+  .dark {
+    --color-bg: #09090B;
+    --color-card: #18181B;
+    --color-muted: #1C1C20;
+    --color-border: #27272A;
+    --color-border-hover: #3F3F46;
+    --color-primary: #2563EB;
+    --color-primary-light: #3B82F6;
+    --color-accent: #2563EB;
+    --color-accent-light: #60A5FA;
+    --color-text: #FAFAFA;
+    --color-text-muted: #A1A1AA;
+    --color-text-faint: #52525B;
+    --color-success: #22C55E;
+    --color-success-bg: #14532D;
+    --color-error: #EF4444;
+    --color-error-bg: #450A0A;
+    --color-progress: #2563EB;
+    --color-progress-bg: #1E293B;
+    --color-level-bg: #1E3A5F;
+    --color-level-text: #60A5FA;
+  }
+
   body {
-    @apply bg-white text-gray-900 font-sans;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Open Sans', system-ui, sans-serif;
+    transition: background-color 0.2s, color 0.2s;
   }
 
   * {
-    @apply box-border;
+    box-sizing: border-box;
   }
 }

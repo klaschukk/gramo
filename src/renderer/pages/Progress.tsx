@@ -13,13 +13,13 @@ export default function Progress({ chapterId }: Props) {
   }, [chapterId])
 
   if (progress.length === 0) {
-    return <p className="text-sm text-gray-400">No attempts yet.</p>
+    return <p className="text-sm text-[--color-text-muted]">No attempts yet.</p>
   }
 
   return (
     <div className="space-y-2">
       {progress.map((p) => (
-        <div key={p.id} className="flex justify-between text-sm text-gray-600">
+        <div key={p.id} className="flex justify-between text-sm text-[--color-text]">
           <span>{new Date(p.completedAt).toLocaleDateString()}</span>
           <span className="font-medium">{p.score}%</span>
         </div>
