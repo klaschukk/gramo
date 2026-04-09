@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import PlacementTest from './PlacementTest'
 
 type Step = 'welcome' | 'placement' | 'import'

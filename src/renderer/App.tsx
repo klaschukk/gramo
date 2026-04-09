@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { UserSettings } from '@shared/types'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'

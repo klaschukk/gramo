@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import type { Exercise } from '@shared/types'
 
 interface Props {
@@ -136,7 +136,6 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
 }
 
 function FillInBlank({
-  answer,
   onSubmit,
   answerState,
 }: {
