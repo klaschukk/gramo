@@ -2,10 +2,6 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { GramoAPI } from '../shared/types'
 
 const api: GramoAPI = {
-  // PDF
-  importPdf: (filePath) => ipcRenderer.invoke('pdf:import', filePath),
-  selectPdfFile: () => ipcRenderer.invoke('pdf:selectFile'),
-
   // Database / chapters
   getBooks: () => ipcRenderer.invoke('db:getBooks'),
   getChapters: (bookId) => ipcRenderer.invoke('db:getChapters', bookId),
@@ -14,10 +10,6 @@ const api: GramoAPI = {
 
   // Curriculum
   getCurriculum: (bookId) => ipcRenderer.invoke('db:getCurriculum', bookId),
-
-  // Placement test
-  getPlacementQuestions: () => ipcRenderer.invoke('db:getPlacementQuestions'),
-  savePlacementResult: (result) => ipcRenderer.invoke('db:savePlacementResult', result),
 
   // Progress
   saveProgress: (entry) => ipcRenderer.invoke('db:saveProgress', entry),

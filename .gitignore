@@ -10,3 +10,5 @@ data/*.db-wal
 Thumbs.db
 assets/icon.icns
 assets/icon.ico
+murphy.pdf
+palettes-preview.html
