@@ -1,9 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
-import { registerPdfHandlers } from './ipc/pdf'
 import { registerDatabaseHandlers } from './ipc/database'
 import { registerClaudeHandlers } from './ipc/claude'
 import { initDatabase } from './services/database'
+import { autoImportBook } from './services/auto-import'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -29,13 +29,13 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
-  // Initialize SQLite database
+app.whenReady().then(async () => {
   initDatabase()
 
-  // Register IPC handlers
+  // Auto-import Murphy PDF on first launch
+  await autoImportBook()
+
   registerDatabaseHandlers(ipcMain)
-  registerPdfHandlers(ipcMain)
   registerClaudeHandlers(ipcMain)
 
   createWindow()

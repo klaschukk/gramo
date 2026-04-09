@@ -86,10 +86,6 @@ export interface CurriculumEntry {
 
 // IPC API types (exposed via preload)
 export interface GramoAPI {
-  // PDF
-  importPdf: (filePath: string) => Promise<{ bookId: number; chaptersCount: number }>
-  selectPdfFile: () => Promise<string | null>
-
   // Database / chapters
   getBooks: () => Promise<Book[]>
   getChapters: (bookId: number) => Promise<Chapter[]>
@@ -98,10 +94,6 @@ export interface GramoAPI {
 
   // Curriculum
   getCurriculum: (bookId: number) => Promise<CurriculumEntry[]>
-
-  // Placement test
-  getPlacementQuestions: () => Promise<PlacementQuestion[]>
-  savePlacementResult: (answers: Record<number, string>) => Promise<PlacementResult>
 
   // Progress
   saveProgress: (entry: Omit<UserProgress, 'id' | 'completedAt'>) => Promise<void>

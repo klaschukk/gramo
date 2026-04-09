@@ -1,9 +1,7 @@
 import { useEffect, useState, createContext, useContext } from 'react'
 import type { UserSettings } from '@shared/types'
-import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 
-type AppView = 'loading' | 'onboarding' | 'dashboard'
 type Theme = 'light' | 'dark'
 
 const ThemeContext = createContext<{
@@ -16,7 +14,6 @@ export function useTheme() {
 }
 
 export default function App() {
-  const [view, setView] = useState<AppView>('loading')
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [theme, setTheme] = useState<Theme>('light')
 
@@ -24,11 +21,6 @@ export default function App() {
     window.api.getSettings().then((s) => {
       setSettings(s)
       setTheme(s.theme || 'light')
-      if (s.currentLevel && s.activeBookId) {
-        setView('dashboard')
-      } else {
-        setView('onboarding')
-      }
     })
   }, [])
 
@@ -42,7 +34,7 @@ export default function App() {
     window.api.saveSettings({ theme: next })
   }
 
-  if (view === 'loading') {
+  if (!settings) {
     return (
       <div className="flex h-screen items-center justify-center bg-[--color-bg]">
         <div className="text-center">
@@ -55,18 +47,7 @@ export default function App() {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {view === 'onboarding' ? (
-        <Onboarding
-          onComplete={() => {
-            window.api.getSettings().then((s) => {
-              setSettings(s)
-              setView('dashboard')
-            })
-          }}
-        />
-      ) : (
-        <Dashboard settings={settings!} />
-      )}
+      <Dashboard settings={settings} />
     </ThemeContext.Provider>
   )
 }
