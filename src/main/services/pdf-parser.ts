@@ -1,4 +1,4 @@
-import * as pdfjs from 'pdfjs-dist'
+import type * as PdfjsType from 'pdfjs-dist'
 import type { Chapter, CEFRLevel } from '../../shared/types'
 
 // Unit → CEFR level mapping for Murphy Blue (5th edition, 145 units)
@@ -28,6 +28,7 @@ export interface ParsedPdf {
 }
 
 export async function parseMurphyPdf(filePath: string): Promise<ParsedPdf> {
+  const pdfjs = (await import('pdfjs-dist')) as typeof PdfjsType
   const loadingTask = pdfjs.getDocument({ url: filePath, useWorkerFetch: false })
   const doc = await loadingTask.promise
 
@@ -41,7 +42,7 @@ export async function parseMurphyPdf(filePath: string): Promise<ParsedPdf> {
   }
 }
 
-async function extractFullText(doc: pdfjs.PDFDocumentProxy): Promise<string> {
+async function extractFullText(doc: PdfjsType.PDFDocumentProxy): Promise<string> {
   const pages: string[] = []
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i)

@@ -47,56 +47,59 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
   const progress = Math.round(((current + 1) / exercises.length) * 100)
 
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="flex h-screen flex-col bg-[--color-bg]">
       {/* Progress bar */}
-      <div className="h-1 bg-gray-100">
+      <div className="h-1 bg-[--color-progress-bg]">
         <div
-          className="h-full bg-blue-600 transition-all duration-300"
+          className="h-full bg-[--color-primary] transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <header className="px-6 py-4 border-b border-gray-100">
+      <header className="px-6 py-4 border-b border-[--color-border] bg-[--color-card]">
         <button
+          type="button"
           onClick={onBack}
-          className="text-sm text-gray-400 hover:text-gray-600 flex items-center gap-1"
+          className="text-sm text-[--color-text-muted] hover:text-[--color-text] flex items-center gap-1 cursor-pointer"
         >
-          ← Back to lesson
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to lesson
         </button>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-[--color-text-faint] mt-1">
           Exercise {current + 1} of {exercises.length}
         </p>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-8">
         <div className="max-w-lg w-full space-y-6">
-          <h2 className="text-xl font-semibold text-gray-900">{ex.question}</h2>
+          <h2 className="text-xl font-heading font-semibold text-[--color-text]">{ex.question}</h2>
 
           {ex.options ? (
             <div className="space-y-3">
               {ex.options.map((opt) => {
                 let cls =
-                  'w-full text-left px-4 py-3 rounded-lg border transition-colors text-gray-800 '
+                  'w-full text-left px-4 py-3 rounded-lg border transition-colors cursor-pointer '
                 if (answerState !== 'idle') {
                   if (opt === ex.answer) {
-                    cls += 'border-green-400 bg-green-50 text-green-800'
+                    cls += 'border-[--color-success] bg-[--color-success-bg] text-[--color-success]'
                   } else if (opt === selected) {
-                    cls += 'border-red-400 bg-red-50 text-red-800'
+                    cls += 'border-[--color-error] bg-[--color-error-bg] text-[--color-error]'
                   } else {
-                    cls += 'border-gray-200 opacity-60'
+                    cls += 'border-[--color-border] bg-[--color-card] text-[--color-text] opacity-60'
                   }
                 } else {
-                  cls += 'border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+                  cls += 'border-[--color-border] bg-[--color-card] text-[--color-text] hover:border-[--color-border-hover] hover:bg-[--color-muted]'
                 }
                 return (
-                  <button key={opt} onClick={() => handleSelect(opt)} className={cls}>
+                  <button type="button" key={opt} onClick={() => handleSelect(opt)} className={cls}>
                     {opt}
                   </button>
                 )
               })}
             </div>
           ) : (
-            // Fill-in-blank — simple text input
             <FillInBlank
               answer={ex.answer}
               onSubmit={(val) => handleSelect(val)}
@@ -108,8 +111,8 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
             <div
               className={`p-3 rounded-lg text-sm ${
                 answerState === 'correct'
-                  ? 'bg-green-50 text-green-800'
-                  : 'bg-red-50 text-red-800'
+                  ? 'bg-[--color-success-bg] text-[--color-success]'
+                  : 'bg-[--color-error-bg] text-[--color-error]'
               }`}
             >
               {ex.explanation}
@@ -118,13 +121,14 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
         </div>
       </main>
 
-      <footer className="px-8 py-4 border-t border-gray-100">
+      <footer className="px-8 py-4 border-t border-[--color-border] bg-[--color-card]">
         <div className="max-w-lg mx-auto">
           {answerState !== 'idle' && (
             <button
+              type="button"
               onClick={handleNext}
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium
-                         hover:bg-blue-700 transition-colors"
+              className="w-full bg-[--color-primary] text-white py-3 px-6 rounded-lg font-heading font-semibold
+                         hover:bg-[--color-primary-light] transition-colors cursor-pointer"
             >
               {isLast ? 'Finish' : 'Next'}
             </button>
@@ -153,17 +157,18 @@ function FillInBlank({
         onChange={(e) => setValue(e.target.value)}
         disabled={answerState !== 'idle'}
         placeholder="Type your answer..."
-        className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-gray-800
-                   focus:outline-none focus:border-blue-400"
+        className="flex-1 border border-[--color-border] bg-[--color-card] text-[--color-text] rounded-lg px-4 py-3
+                   focus:outline-none focus:border-[--color-primary] placeholder:text-[--color-text-faint]"
         onKeyDown={(e) => {
           if (e.key === 'Enter' && value.trim()) onSubmit(value.trim())
         }}
       />
       <button
+        type="button"
         onClick={() => { if (value.trim()) onSubmit(value.trim()) }}
         disabled={answerState !== 'idle' || !value.trim()}
-        className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700
-                   transition-colors disabled:opacity-50"
+        className="bg-[--color-primary] text-white px-4 py-3 rounded-lg font-heading font-semibold
+                   hover:bg-[--color-primary-light] transition-colors disabled:opacity-50 cursor-pointer"
       >
         Check
       </button>
