@@ -1,4 +1,5 @@
-import type * as PdfjsType from 'pdfjs-dist'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfjs = require('pdfjs-dist/build/pdf.js') as typeof import('pdfjs-dist')
 import type { Chapter, CEFRLevel } from '../../shared/types'
 
 // Unit → CEFR level mapping for Murphy Blue (5th edition, 145 units)
@@ -28,9 +29,7 @@ export interface ParsedPdf {
 }
 
 export async function parseMurphyPdf(filePath: string): Promise<ParsedPdf> {
-  // Use legacy build — pdfjs-dist v4 main requires Node 22+, Electron 29 ships Node 20
-  const pdfjs = (await import('pdfjs-dist/legacy/build/pdf.mjs')) as typeof PdfjsType
-  const loadingTask = pdfjs.getDocument({ url: filePath, useWorkerFetch: false })
+  const loadingTask = pdfjs.getDocument(filePath)
   const doc = await loadingTask.promise
 
   const fullText = await extractFullText(doc)
@@ -43,7 +42,7 @@ export async function parseMurphyPdf(filePath: string): Promise<ParsedPdf> {
   }
 }
 
-async function extractFullText(doc: PdfjsType.PDFDocumentProxy): Promise<string> {
+async function extractFullText(doc: import('pdfjs-dist').PDFDocumentProxy): Promise<string> {
   const pages: string[] = []
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i)
