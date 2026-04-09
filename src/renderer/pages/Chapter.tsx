@@ -45,6 +45,12 @@ export default function Chapter({ chapterId, onBack }: Props) {
     )
   }
 
+  // Split raw text into paragraphs for nicer rendering
+  const paragraphs = chapter.rawText
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+
   return (
     <div className="flex h-screen flex-col bg-[--color-bg]">
       {/* Header */}
@@ -69,16 +75,19 @@ export default function Chapter({ chapterId, onBack }: Props) {
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-[--color-card] border border-[--color-border] rounded-lg p-6">
-            <pre className="whitespace-pre-wrap text-sm text-[--color-text] font-body leading-relaxed">
-              {chapter.rawText}
-            </pre>
-          </div>
+      <main className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="max-w-2xl mx-auto space-y-4">
+          {paragraphs.map((para, i) => (
+            <p
+              key={i}
+              className="text-[15px] leading-7 text-[--color-text] font-body"
+            >
+              {para}
+            </p>
+          ))}
 
           {chapter.notes && (
-            <div className="mt-6 p-4 bg-[--color-success-bg] border border-[--color-accent] rounded-lg">
+            <div className="mt-8 p-4 bg-[--color-success-bg] border border-[--color-accent] rounded-lg">
               <h3 className="text-sm font-heading font-semibold text-[--color-accent] mb-2">Notes</h3>
               <p className="text-sm text-[--color-text]">{chapter.notes}</p>
             </div>
