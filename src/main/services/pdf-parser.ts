@@ -2,8 +2,6 @@
 const pdfjs = require('pdfjs-dist/build/pdf.js') as typeof import('pdfjs-dist')
 import type { Chapter, CEFRLevel } from '../../shared/types'
 
-// Unit → CEFR level mapping for Murphy Blue (5th edition, 145 units)
-// Approximate — refined as we parse content
 const UNIT_LEVEL_MAP: Record<string, CEFRLevel> = {
   '1-20': 'A2',
   '21-50': 'B1',
@@ -58,35 +56,69 @@ async function extractFullText(doc: import('pdfjs-dist').PDFDocumentProxy): Prom
 function splitIntoUnits(
   fullText: string
 ): Omit<Chapter, 'id' | 'bookId' | 'createdAt'>[] {
-  const unitPattern = /Unit\s+(\d+)\s+([^\n]+)/gi
-  const chapters: Omit<Chapter, 'id' | 'bookId' | 'createdAt'>[] = []
+  // Match only unit headers at the start of a line/section, not inline references.
+  // Murphy Blue format: "Unit 1 " followed by a title (capitalized).
+  // Avoid matching "Unit 19 A" inside body text or cross-references like "→ Unit 3".
+  const unitPattern = /(?:^|\n)\s*Unit\s+(\d{1,3})\s+([A-Z][^\n]{3,80})/g
+  const allMatches = [...fullText.matchAll(unitPattern)]
 
-  const matches = [...fullText.matchAll(unitPattern)]
+  // Deduplicate: keep only the first occurrence of each unit number
+  const seen = new Set<number>()
+  const matches = allMatches.filter((m) => {
+    const num = parseInt(m[1], 10)
+    if (num < 1 || num > 145) return false
+    if (seen.has(num)) return false
+    seen.add(num)
+    return true
+  })
+
+  const chapters: Omit<Chapter, 'id' | 'bookId' | 'createdAt'>[] = []
 
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i]
     const unitNumber = parseInt(match[1], 10)
     const title = match[2].trim()
 
-    // Extract text between this unit header and the next
     const start = match.index ?? 0
     const end = matches[i + 1]?.index ?? fullText.length
     const rawText = fullText.slice(start, end).trim()
 
+    // Clean up raw text: collapse multiple spaces, trim lines
+    const cleanText = formatRawText(rawText)
+
     chapters.push({
       unitNumber,
-      title,
-      topic: extractTopic(title),
+      title: cleanTitle(title),
+      topic: cleanTitle(title),
       cefrLevel: getCEFRForUnit(unitNumber),
-      rawText,
+      rawText: cleanText,
       notes: null,
     })
   }
 
+  // Sort by unit number
+  chapters.sort((a, b) => a.unitNumber - b.unitNumber)
+
   return chapters
 }
 
-function extractTopic(title: string): string {
-  // Remove leading/trailing noise, normalize whitespace
-  return title.replace(/\s+/g, ' ').trim().slice(0, 100)
+function cleanTitle(title: string): string {
+  return title
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s''(),/&-]/g, '')
+    .trim()
+    .slice(0, 100)
+}
+
+function formatRawText(raw: string): string {
+  return raw
+    // Collapse 3+ spaces into paragraph break
+    .replace(/ {3,}/g, '\n\n')
+    // Collapse multiple newlines
+    .replace(/\n{3,}/g, '\n\n')
+    // Trim each line
+    .split('\n')
+    .map((line) => line.trim())
+    .join('\n')
+    .trim()
 }
