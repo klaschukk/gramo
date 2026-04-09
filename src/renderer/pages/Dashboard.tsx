@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CurriculumEntry, UserSettings } from '@shared/types'
 import Chapter from './Chapter'
 

@@ -101,7 +101,7 @@ export interface GramoAPI {
 
   // Placement test
   getPlacementQuestions: () => Promise<PlacementQuestion[]>
-  savePlacementResult: (result: PlacementResult) => Promise<void>
+  savePlacementResult: (answers: Record<number, string>) => Promise<PlacementResult>
 
   // Progress
   saveProgress: (entry: Omit<UserProgress, 'id' | 'completedAt'>) => Promise<void>
