@@ -95,6 +95,10 @@ export interface GramoAPI {
   // Curriculum
   getCurriculum: (bookId: number) => Promise<CurriculumEntry[]>
 
+  // Placement test
+  getPlacementQuestions: () => Promise<PlacementQuestion[]>
+  savePlacementResult: (answers: Record<number, string>) => Promise<PlacementResult>
+
   // Progress
   saveProgress: (entry: Omit<UserProgress, 'id' | 'completedAt'>) => Promise<void>
   getProgress: (chapterId: number) => Promise<UserProgress[]>

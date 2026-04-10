@@ -13,28 +13,39 @@ import type {
   CEFRLevel,
 } from '../../shared/types'
 
+// SQL column aliases to map snake_case → camelCase
+const CHAPTER_COLS = `id, book_id as bookId, unit_number as unitNumber, title, topic,
+  cefr_level as cefrLevel, raw_text as rawText, notes, created_at as createdAt`
+const EXERCISE_COLS = `id, chapter_id as chapterId, type, question, options, answer,
+  explanation, source, created_at as createdAt`
+const PROGRESS_COLS = `id, chapter_id as chapterId, exercise_id as exerciseId,
+  score, attempts, completed_at as completedAt`
+
 export function registerDatabaseHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('db:getBooks', (): Book[] => {
     const db = getDb()
-    return db.prepare('SELECT * FROM books ORDER BY imported_at DESC').all() as Book[]
+    return db.prepare(
+      `SELECT id, title, author, file_path as filePath, total_units as totalUnits,
+       imported_at as importedAt FROM books ORDER BY imported_at DESC`
+    ).all() as Book[]
   })
 
   ipcMain.handle('db:getChapters', (_e, bookId: number): Chapter[] => {
     const db = getDb()
     return db
-      .prepare('SELECT * FROM chapters WHERE book_id = ? ORDER BY unit_number')
+      .prepare(`SELECT ${CHAPTER_COLS} FROM chapters WHERE book_id = ? ORDER BY unit_number`)
       .all(bookId) as Chapter[]
   })
 
   ipcMain.handle('db:getChapter', (_e, chapterId: number): Chapter => {
     const db = getDb()
-    return db.prepare('SELECT * FROM chapters WHERE id = ?').get(chapterId) as Chapter
+    return db.prepare(`SELECT ${CHAPTER_COLS} FROM chapters WHERE id = ?`).get(chapterId) as Chapter
   })
 
   ipcMain.handle('db:getExercises', (_e, chapterId: number): Exercise[] => {
     const db = getDb()
     const rows = db
-      .prepare('SELECT * FROM exercises WHERE chapter_id = ? ORDER BY created_at')
+      .prepare(`SELECT ${EXERCISE_COLS} FROM exercises WHERE chapter_id = ? ORDER BY created_at`)
       .all(chapterId) as (Omit<Exercise, 'options'> & { options: string | null })[]
     return rows.map((r) => ({
       ...r,
@@ -47,20 +58,16 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
     const settings = db
       .prepare('SELECT value FROM settings WHERE key = ?')
       .get('current_level') as { value: string } | undefined
-    const userLevel: CEFRLevel = (settings?.value as CEFRLevel) ?? 'A1'
+    const userLevel: CEFRLevel = (settings?.value as CEFRLevel) ?? 'A2'
     return buildCurriculum(bookId, userLevel)
   })
 
   ipcMain.handle('db:getPlacementQuestions', (): PlacementQuestion[] => {
     const db = getDb()
     const rows = db
-      .prepare('SELECT * FROM placement_questions ORDER BY cefr_level, id')
+      .prepare('SELECT id, cefr_level as cefrLevel, question, options, answer, topic FROM placement_questions ORDER BY cefr_level, id')
       .all() as (Omit<PlacementQuestion, 'options'> & { options: string })[]
-    return rows.map((r) => ({
-      ...r,
-      cefrLevel: r.cefrLevel,
-      options: JSON.parse(r.options),
-    }))
+    return rows.map((r) => ({ ...r, options: JSON.parse(r.options) }))
   })
 
   ipcMain.handle(
@@ -77,11 +84,7 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
         'INSERT INTO placement_results (level, score, total_questions, breakdown) VALUES (?, ?, ?, ?)'
       ).run(result.level, result.score, result.totalQuestions, JSON.stringify(result.breakdown))
 
-      // Save level to settings
-      db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(
-        'current_level',
-        result.level
-      )
+      db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('current_level', result.level)
 
       return result
     }
@@ -100,7 +103,7 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('db:getProgress', (_e, chapterId: number): UserProgress[] => {
     const db = getDb()
     return db
-      .prepare('SELECT * FROM user_progress WHERE chapter_id = ? ORDER BY completed_at DESC')
+      .prepare(`SELECT ${PROGRESS_COLS} FROM user_progress WHERE chapter_id = ? ORDER BY completed_at DESC`)
       .all(chapterId) as UserProgress[]
   })
 

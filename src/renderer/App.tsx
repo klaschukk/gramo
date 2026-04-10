@@ -21,6 +21,16 @@ export default function App() {
     window.api.getSettings().then((s) => {
       setSettings(s)
       setTheme(s.theme || 'light')
+    }).catch((err) => {
+      console.error('Failed to load settings:', err)
+      // Fallback settings so app still renders
+      setSettings({
+        claudeApiKey: null,
+        currentLevel: 'A2',
+        activeBookId: 1,
+        theme: 'light',
+        dailyGoalMinutes: 30,
+      })
     })
   }, [])
 
