@@ -2,14 +2,14 @@ import path from 'path'
 import { app } from 'electron'
 import { getDb } from './database'
 import { parseMurphyPdf } from './pdf-parser'
+import { getLesson } from './lessons'
 
 // Auto-import Murphy Blue PDF on first launch if no books exist
 export async function autoImportBook(): Promise<void> {
   const db = getDb()
   const bookCount = (db.prepare('SELECT COUNT(*) as c FROM books').get() as { c: number }).c
-  if (bookCount > 0) return // already imported
+  if (bookCount > 0) return
 
-  // PDF is bundled at project root in dev, or in resources in production
   const isDev = process.env.NODE_ENV === 'development'
   const pdfPath = isDev
     ? path.join(app.getAppPath(), 'murphy.pdf')
@@ -25,19 +25,21 @@ export async function autoImportBook(): Promise<void> {
     const bookId = bookResult.lastInsertRowid as number
 
     const insertChapter = db.prepare(
-      `INSERT INTO chapters (book_id, unit_number, title, topic, cefr_level, raw_text)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO chapters (book_id, unit_number, title, topic, cefr_level, raw_text, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
 
     const insertAll = db.transaction((chapters: typeof parsed.chapters) => {
       for (const ch of chapters) {
-        insertChapter.run(bookId, ch.unitNumber, ch.title, ch.topic, ch.cefrLevel, ch.rawText)
+        // Store structured lesson as JSON in notes field
+        const lesson = getLesson(ch.unitNumber)
+        const notes = lesson ? JSON.stringify(lesson) : null
+        insertChapter.run(bookId, ch.unitNumber, ch.title, ch.topic, ch.cefrLevel, ch.rawText, notes)
       }
     })
 
     insertAll(parsed.chapters)
 
-    // Set as active book and default level
     db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('active_book_id', String(bookId))
     db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('current_level', 'A2')
 
