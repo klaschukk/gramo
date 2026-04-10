@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3'
 import path from 'path'
 import { app } from 'electron'
+import { exercises as exercisesData } from './exercises-data'
 
 let db: Database.Database
 
@@ -165,8 +166,7 @@ function seedStaticExercises(db: Database.Database): void {
 
   const chapterMap = new Map(chapters.map((c) => [c.unit_number, c.id]))
 
-  // Dynamic import to avoid circular deps
-  const { exercises } = require('./exercises-data') as { exercises: { unit: number; type: string; q: string; opts: string[] | null; a: string; expl: string }[] }
+  const exercises = exercisesData
 
   const insert = db.prepare(
     'INSERT INTO exercises (chapter_id, type, question, options, answer, explanation, source) VALUES (?, ?, ?, ?, ?, ?, ?)'
