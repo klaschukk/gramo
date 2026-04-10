@@ -733,6 +733,11 @@ export const lessons: Record<number, Lesson> = {
   },
 }
 
+import { lessons47to90 } from './lessons-47-90'
+import { lessons91to145 } from './lessons-91-145'
+
+const allLessons: Record<number, Lesson> = { ...lessons, ...lessons47to90, ...lessons91to145 }
+
 export function getLesson(unitNumber: number): Lesson | null {
-  return lessons[unitNumber] ?? null
+  return allLessons[unitNumber] ?? null
 }
