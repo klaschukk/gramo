@@ -132,11 +132,26 @@ function buildChapters(pages: string[]): Omit<Chapter, 'id' | 'bookId' | 'create
 }
 
 function formatRawText(raw: string): string {
-  return raw
+  // Clean up PDF extraction artifacts
+  let text = raw
     .replace(/ {3,}/g, '\n\n')
     .replace(/\n{3,}/g, '\n\n')
     .split('\n')
     .map((line) => line.trim())
+    .filter(Boolean)
     .join('\n')
     .trim()
+
+  // Detect and format sections (A, B, C, D headers in Murphy)
+  text = text.replace(/\n([A-D])\s+([A-Z])/g, '\n\n## $2')
+
+  // Format example sentences: lines with italics markers or quoted speech
+  text = text.replace(/([''][^'']+[''])/g, '• $1')
+
+  // Limit to ~2000 chars for readability
+  if (text.length > 2000) {
+    text = text.slice(0, 2000) + '…'
+  }
+
+  return text
 }

@@ -11,6 +11,10 @@ const api: GramoAPI = {
   // Curriculum
   getCurriculum: (bookId) => ipcRenderer.invoke('db:getCurriculum', bookId),
 
+  // Placement test
+  getPlacementQuestions: () => ipcRenderer.invoke('db:getPlacementQuestions'),
+  savePlacementResult: (answers) => ipcRenderer.invoke('db:savePlacementResult', answers),
+
   // Progress
   saveProgress: (entry) => ipcRenderer.invoke('db:saveProgress', entry),
   getProgress: (chapterId) => ipcRenderer.invoke('db:getProgress', chapterId),
