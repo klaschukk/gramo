@@ -1,7 +1,6 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import { registerDatabaseHandlers } from './ipc/database'
-import { registerClaudeHandlers } from './ipc/claude'
 import { initDatabase } from './services/database'
 import { autoImportBook } from './services/auto-import'
 
@@ -36,7 +35,6 @@ app.whenReady().then(async () => {
   await autoImportBook()
 
   registerDatabaseHandlers(ipcMain)
-  registerClaudeHandlers(ipcMain)
 
   createWindow()
 

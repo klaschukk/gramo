@@ -10,7 +10,6 @@ import type {
   UserSettings,
   PlacementQuestion,
   PlacementResult,
-  ChatMessage,
   StudyStats,
   CEFRLevel,
 } from '../../shared/types'
@@ -117,7 +116,6 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
     }[]
     const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
     return {
-      claudeApiKey: map['claude_api_key'] ?? null,
       currentLevel: (map['current_level'] as CEFRLevel) ?? null,
       activeBookId: map['active_book_id'] ? parseInt(map['active_book_id']) : null,
       theme: (map['theme'] as 'light' | 'dark') ?? 'light',
@@ -131,7 +129,6 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
       const db = getDb()
       const insert = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
       const saveMany = db.transaction((s: Partial<UserSettings>) => {
-        if (s.claudeApiKey !== undefined) insert.run('claude_api_key', s.claudeApiKey ?? '')
         if (s.currentLevel !== undefined) insert.run('current_level', s.currentLevel ?? '')
         if (s.activeBookId !== undefined) insert.run('active_book_id', String(s.activeBookId ?? ''))
         if (s.theme !== undefined) insert.run('theme', s.theme)
@@ -160,14 +157,12 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
     const db = getDb()
     const today = new Date().toISOString().slice(0, 10)
 
-    // Get all sessions
     const sessions = db.prepare('SELECT date, duration_seconds, exercises_done FROM study_sessions ORDER BY date DESC').all() as { date: string; duration_seconds: number; exercises_done: number }[]
 
     // Calculate streak
     let streak = 0
     const dateSet = new Set(sessions.map(s => s.date))
     const d = new Date()
-    // Check if studied today, if not start from yesterday
     if (!dateSet.has(d.toISOString().slice(0, 10))) {
       d.setDate(d.getDate() - 1)
     }
@@ -176,14 +171,10 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
       d.setDate(d.getDate() - 1)
     }
 
-    // Today's minutes
     const todaySession = sessions.find(s => s.date === today)
     const todayMinutes = Math.round((todaySession?.duration_seconds ?? 0) / 60)
-
-    // Total minutes
     const totalMinutes = Math.round(sessions.reduce((sum, s) => sum + s.duration_seconds, 0) / 60)
 
-    // Calendar (last 60 days)
     const calendar: Record<string, { minutes: number; exercises: number }> = {}
     for (const s of sessions) {
       calendar[s.date] = { minutes: Math.round(s.duration_seconds / 60), exercises: s.exercises_done }
@@ -192,19 +183,15 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
     return { streak, todayMinutes, totalMinutes, calendar }
   })
 
-  // Chat history
-  ipcMain.handle('db:getChatHistory', (): ChatMessage[] => {
+  // Writing essays
+  ipcMain.handle('db:saveEssay', (_e, chapterId: number, text: string): void => {
     const db = getDb()
-    return db.prepare('SELECT id, role, content, created_at as createdAt FROM chat_messages ORDER BY created_at ASC LIMIT 100').all() as ChatMessage[]
+    db.prepare('INSERT OR REPLACE INTO essays (chapter_id, text) VALUES (?, ?)').run(chapterId, text)
   })
 
-  ipcMain.handle('db:clearChatHistory', (): void => {
+  ipcMain.handle('db:getEssay', (_e, chapterId: number): string | null => {
     const db = getDb()
-    db.prepare('DELETE FROM chat_messages').run()
-  })
-
-  ipcMain.handle('db:saveChatMessage', (_e, role: string, content: string): void => {
-    const db = getDb()
-    db.prepare('INSERT INTO chat_messages (role, content) VALUES (?, ?)').run(role, content)
+    const row = db.prepare('SELECT text FROM essays WHERE chapter_id = ?').get(chapterId) as { text: string } | undefined
+    return row?.text ?? null
   })
 }

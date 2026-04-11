@@ -1,6 +1,6 @@
 {
   "name": "gramo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "English learning app using Cambridge methodology",
   "main": "dist/main/index.js",
   "scripts": {
@@ -13,7 +13,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
     "better-sqlite3": "^12.8.0",
     "pdfjs-dist": "^3.11.174",
     "react": "^19.2.5",

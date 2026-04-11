@@ -31,7 +31,7 @@ export interface Exercise {
   options: string[] | null
   answer: string
   explanation: string | null
-  source: 'static' | 'ai'
+  source: 'static'
   createdAt: string
 }
 
@@ -67,7 +67,6 @@ export interface PlacementResult {
 }
 
 export interface UserSettings {
-  claudeApiKey: string | null
   currentLevel: CEFRLevel | null
   activeBookId: number | null
   theme: 'light' | 'dark'
@@ -90,13 +89,6 @@ export interface StudySession {
   durationSeconds: number
   exercisesDone: number
   startedAt: string
-}
-
-export interface ChatMessage {
-  id: number
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  createdAt: string
 }
 
 export interface StudyStats {
@@ -133,12 +125,7 @@ export interface GramoAPI {
   logStudyTime: (seconds: number, exercises: number) => Promise<void>
   getStudyStats: () => Promise<StudyStats>
 
-  // AI Chat
-  sendChatMessage: (message: string, history: { role: string; content: string }[]) => Promise<string>
-  getChatHistory: () => Promise<ChatMessage[]>
-  clearChatHistory: () => Promise<void>
-
-  // Claude (optional)
-  generateExplanation: (chapterId: number, question: string) => Promise<string>
-  generateExercises: (chapterId: number, count: number) => Promise<Exercise[]>
+  // Writing essays
+  saveEssay: (chapterId: number, text: string) => Promise<void>
+  getEssay: (chapterId: number) => Promise<string | null>
 }
