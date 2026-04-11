@@ -18,14 +18,9 @@ const api: GramoAPI = {
   logStudyTime: (seconds, exercises) => ipcRenderer.invoke('db:logStudyTime', seconds, exercises),
   getStudyStats: () => ipcRenderer.invoke('db:getStudyStats'),
 
-  // AI Chat
-  sendChatMessage: (message, history) => ipcRenderer.invoke('claude:sendChatMessage', message, history),
-  getChatHistory: () => ipcRenderer.invoke('db:getChatHistory'),
-  clearChatHistory: () => ipcRenderer.invoke('db:clearChatHistory'),
-
-  // Claude
-  generateExplanation: (chapterId, question) => ipcRenderer.invoke('claude:generateExplanation', chapterId, question),
-  generateExercises: (chapterId, count) => ipcRenderer.invoke('claude:generateExercises', chapterId, count),
+  // Writing essays
+  saveEssay: (chapterId, text) => ipcRenderer.invoke('db:saveEssay', chapterId, text),
+  getEssay: (chapterId) => ipcRenderer.invoke('db:getEssay', chapterId),
 }
 
 contextBridge.exposeInMainWorld('api', api)

@@ -34,7 +34,7 @@ export default function App() {
       setTheme(s.theme || 'light')
     }).catch(() => {
       setSettings({
-        claudeApiKey: null, currentLevel: 'A2', activeBookId: 1,
+        currentLevel: 'A2', activeBookId: 1,
         theme: 'light', dailyGoalMinutes: 30,
       })
     })
