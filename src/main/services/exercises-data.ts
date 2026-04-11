@@ -1,6 +1,9 @@
 // Static exercises for Murphy Blue units
 // Each exercise: unit number, type, question, options (null for fill-in), answer, explanation
 
+import { exercises47to120 } from './exercises-47-120'
+import { exercises121to145 } from './exercises-121-145'
+
 export type ExData = {
   unit: number
   type: string
@@ -10,7 +13,7 @@ export type ExData = {
   expl: string
 }
 
-export const exercises: ExData[] = [
+const exercisesUnits1to46: ExData[] = [
   // ===== UNIT 1: Present continuous =====
   { unit: 1, type: 'multiple-choice', q: 'Please be quiet. I ___ to concentrate.', opts: ['try', 'am trying', 'tried', 'tries'], a: 'am trying', expl: 'Present continuous for actions happening now.' },
   { unit: 1, type: 'multiple-choice', q: 'Look! Somebody ___ in the river.', opts: ['swims', 'is swimming', 'swim', 'was swimming'], a: 'is swimming', expl: 'Use present continuous for something happening at the moment of speaking.' },
@@ -149,3 +152,5 @@ export const exercises: ExData[] = [
   { unit: 46, type: 'multiple-choice', q: 'I need to ___ my eyes tested.', opts: ['have', 'get', 'both are correct', 'make'], a: 'both are correct', expl: '"Have/get something done" = arrange for someone else to do it.' },
   { unit: 46, type: 'fill-in-blank', q: 'She\'s ___ (have) her hair cut tomorrow.', opts: null, a: 'having', expl: '"Having something done" = someone does it for her.' },
 ]
+
+export const exercises: ExData[] = [...exercisesUnits1to46, ...exercises47to120, ...exercises121to145]
