@@ -10,6 +10,8 @@ import type {
   UserSettings,
   PlacementQuestion,
   PlacementResult,
+  ChatMessage,
+  StudyStats,
   CEFRLevel,
 } from '../../shared/types'
 
@@ -139,4 +141,70 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
       saveMany(settings)
     }
   )
+
+  // Study tracking
+  ipcMain.handle('db:logStudyTime', (_e, seconds: number, exercisesDone: number): void => {
+    const db = getDb()
+    const today = new Date().toISOString().slice(0, 10)
+    const existing = db.prepare('SELECT id, duration_seconds, exercises_done FROM study_sessions WHERE date = ?').get(today) as { id: number; duration_seconds: number; exercises_done: number } | undefined
+    if (existing) {
+      db.prepare('UPDATE study_sessions SET duration_seconds = ?, exercises_done = ? WHERE id = ?')
+        .run(existing.duration_seconds + seconds, existing.exercises_done + exercisesDone, existing.id)
+    } else {
+      db.prepare('INSERT INTO study_sessions (date, duration_seconds, exercises_done) VALUES (?, ?, ?)')
+        .run(today, seconds, exercisesDone)
+    }
+  })
+
+  ipcMain.handle('db:getStudyStats', (): StudyStats => {
+    const db = getDb()
+    const today = new Date().toISOString().slice(0, 10)
+
+    // Get all sessions
+    const sessions = db.prepare('SELECT date, duration_seconds, exercises_done FROM study_sessions ORDER BY date DESC').all() as { date: string; duration_seconds: number; exercises_done: number }[]
+
+    // Calculate streak
+    let streak = 0
+    const dateSet = new Set(sessions.map(s => s.date))
+    const d = new Date()
+    // Check if studied today, if not start from yesterday
+    if (!dateSet.has(d.toISOString().slice(0, 10))) {
+      d.setDate(d.getDate() - 1)
+    }
+    while (dateSet.has(d.toISOString().slice(0, 10))) {
+      streak++
+      d.setDate(d.getDate() - 1)
+    }
+
+    // Today's minutes
+    const todaySession = sessions.find(s => s.date === today)
+    const todayMinutes = Math.round((todaySession?.duration_seconds ?? 0) / 60)
+
+    // Total minutes
+    const totalMinutes = Math.round(sessions.reduce((sum, s) => sum + s.duration_seconds, 0) / 60)
+
+    // Calendar (last 60 days)
+    const calendar: Record<string, { minutes: number; exercises: number }> = {}
+    for (const s of sessions) {
+      calendar[s.date] = { minutes: Math.round(s.duration_seconds / 60), exercises: s.exercises_done }
+    }
+
+    return { streak, todayMinutes, totalMinutes, calendar }
+  })
+
+  // Chat history
+  ipcMain.handle('db:getChatHistory', (): ChatMessage[] => {
+    const db = getDb()
+    return db.prepare('SELECT id, role, content, created_at as createdAt FROM chat_messages ORDER BY created_at ASC LIMIT 100').all() as ChatMessage[]
+  })
+
+  ipcMain.handle('db:clearChatHistory', (): void => {
+    const db = getDb()
+    db.prepare('DELETE FROM chat_messages').run()
+  })
+
+  ipcMain.handle('db:saveChatMessage', (_e, role: string, content: string): void => {
+    const db = getDb()
+    db.prepare('INSERT INTO chat_messages (role, content) VALUES (?, ?)').run(role, content)
+  })
 }

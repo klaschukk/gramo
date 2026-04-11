@@ -28,7 +28,7 @@ export interface Exercise {
   chapterId: number
   type: ExerciseType
   question: string
-  options: string[] | null  // for multiple-choice
+  options: string[] | null
   answer: string
   explanation: string | null
   source: 'static' | 'ai'
@@ -45,7 +45,7 @@ export interface UserProgress {
   id: number
   chapterId: number
   exerciseId: number | null
-  score: number           // 0–100
+  score: number
   attempts: number
   completedAt: string
 }
@@ -84,6 +84,28 @@ export interface CurriculumEntry {
   unlocked: boolean
 }
 
+export interface StudySession {
+  id: number
+  date: string
+  durationSeconds: number
+  exercisesDone: number
+  startedAt: string
+}
+
+export interface ChatMessage {
+  id: number
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  createdAt: string
+}
+
+export interface StudyStats {
+  streak: number
+  todayMinutes: number
+  totalMinutes: number
+  calendar: Record<string, { minutes: number; exercises: number }>
+}
+
 // IPC API types (exposed via preload)
 export interface GramoAPI {
   // Database / chapters
@@ -106,6 +128,15 @@ export interface GramoAPI {
   // Settings
   getSettings: () => Promise<UserSettings>
   saveSettings: (settings: Partial<UserSettings>) => Promise<void>
+
+  // Study tracking
+  logStudyTime: (seconds: number, exercises: number) => Promise<void>
+  getStudyStats: () => Promise<StudyStats>
+
+  // AI Chat
+  sendChatMessage: (message: string, history: { role: string; content: string }[]) => Promise<string>
+  getChatHistory: () => Promise<ChatMessage[]>
+  clearChatHistory: () => Promise<void>
 
   // Claude (optional)
   generateExplanation: (chapterId: number, question: string) => Promise<string>

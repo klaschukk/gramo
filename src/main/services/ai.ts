@@ -107,3 +107,36 @@ Generate exactly ${count} multiple-choice exercises. Respond with ONLY valid JSO
     source: 'ai' as const,
   }))
 }
+
+export async function sendChatMessage(
+  message: string,
+  history: { role: string; content: string }[]
+): Promise<string> {
+  const client = getClient()
+
+  const messages = [
+    ...history.map((h) => ({
+      role: h.role as 'user' | 'assistant',
+      content: h.content,
+    })),
+    { role: 'user' as const, content: message },
+  ]
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1024,
+    system: `You are a friendly English tutor. Help the user practice English conversation.
+Rules:
+- Speak ONLY in English
+- If the user makes a grammar mistake, gently correct it
+- Ask follow-up questions to keep the conversation going
+- Adjust your vocabulary to the user's level
+- Be encouraging and supportive
+- Keep responses concise (2-4 sentences)
+- Occasionally suggest useful phrases or vocabulary`,
+    messages,
+  })
+
+  const block = response.content[0]
+  return block.type === 'text' ? block.text : 'Sorry, I could not generate a response.'
+}

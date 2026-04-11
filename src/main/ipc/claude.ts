@@ -1,5 +1,5 @@
 import type { IpcMain } from 'electron'
-import { generateExplanation, generateExercises } from '../services/ai'
+import { generateExplanation, generateExercises, sendChatMessage } from '../services/ai'
 
 export function registerClaudeHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
@@ -13,6 +13,13 @@ export function registerClaudeHandlers(ipcMain: IpcMain): void {
     'claude:generateExercises',
     async (_e, chapterId: number, count: number) => {
       return generateExercises(chapterId, count)
+    }
+  )
+
+  ipcMain.handle(
+    'claude:sendChatMessage',
+    async (_e, message: string, history: { role: string; content: string }[]): Promise<string> => {
+      return sendChatMessage(message, history)
     }
   )
 }
