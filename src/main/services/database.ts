@@ -89,6 +89,21 @@ function runMigrations(db: Database.Database): void {
       answer TEXT NOT NULL,
       topic TEXT NOT NULL DEFAULT ''
     );
+
+    CREATE TABLE IF NOT EXISTS study_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      duration_seconds INTEGER NOT NULL DEFAULT 0,
+      exercises_done INTEGER NOT NULL DEFAULT 0,
+      started_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `)
 
   seedPlacementQuestions(db)
