@@ -5,52 +5,76 @@
 @tailwind utilities;
 
 @layer base {
-  /* Light mode (Cyan + Green) */
+  /* ===== LIGHT: refined teal + soft neutrals ===== */
   :root {
-    --color-bg: #ECFEFF;
+    --color-bg: #F0FBFD;
     --color-card: #FFFFFF;
-    --color-muted: #F0FDFA;
-    --color-border: #CFFAFE;
-    --color-border-hover: #67E8F9;
-    --color-primary: #0891B2;
-    --color-primary-light: #22D3EE;
-    --color-accent: #059669;
-    --color-accent-light: #34D399;
-    --color-text: #164E63;
-    --color-text-muted: #5E8A97;
-    --color-text-faint: #A0C4CE;
+    --color-muted: #F5FAFB;
+    --color-border: #E2EEF1;
+    --color-border-hover: #A5D8E0;
+
+    --color-primary: #0E7490;
+    --color-primary-light: #0891B2;
+    --color-primary-soft: #E0F7FA;
+    --color-primary-softer: #F0FBFD;
+
+    --color-accent: #0F766E;
+    --color-accent-light: #14B8A6;
+    --color-accent-soft: #E6FFFA;
+
+    --color-text: #0F3642;
+    --color-text-muted: #5B7886;
+    --color-text-faint: #9CB5BE;
+
     --color-success: #059669;
     --color-success-bg: #ECFDF5;
     --color-error: #DC2626;
     --color-error-bg: #FEF2F2;
-    --color-progress: #0891B2;
-    --color-progress-bg: #CFFAFE;
-    --color-level-bg: #CFFAFE;
-    --color-level-text: #0891B2;
+
+    --color-progress: #0E7490;
+    --color-progress-bg: #E2EEF1;
+    --color-level-bg: #E0F7FA;
+    --color-level-text: #0E7490;
+
+    --color-focus: #EA580C;
+    --color-focus-bg: #FFF7ED;
+    --color-focus-border: #FED7AA;
   }
 
-  /* Dark mode (Mono + Blue) */
+  /* ===== DARK: refined mono + blue accent ===== */
   .dark {
-    --color-bg: #09090B;
-    --color-card: #18181B;
-    --color-muted: #1C1C20;
-    --color-border: #27272A;
-    --color-border-hover: #3F3F46;
-    --color-primary: #2563EB;
-    --color-primary-light: #3B82F6;
-    --color-accent: #2563EB;
-    --color-accent-light: #60A5FA;
+    --color-bg: #0A0A0C;
+    --color-card: #16161A;
+    --color-muted: #1C1C22;
+    --color-border: #27272E;
+    --color-border-hover: #3F3F4A;
+
+    --color-primary: #3B82F6;
+    --color-primary-light: #60A5FA;
+    --color-primary-soft: #1E3A5F;
+    --color-primary-softer: #152842;
+
+    --color-accent: #14B8A6;
+    --color-accent-light: #2DD4BF;
+    --color-accent-soft: #134E4A;
+
     --color-text: #FAFAFA;
     --color-text-muted: #A1A1AA;
     --color-text-faint: #52525B;
+
     --color-success: #22C55E;
     --color-success-bg: #14532D;
     --color-error: #EF4444;
     --color-error-bg: #450A0A;
-    --color-progress: #2563EB;
+
+    --color-progress: #3B82F6;
     --color-progress-bg: #1E293B;
     --color-level-bg: #1E3A5F;
     --color-level-text: #60A5FA;
+
+    --color-focus: #F97316;
+    --color-focus-bg: #1C1917;
+    --color-focus-border: #7C2D12;
   }
 
   body {
@@ -58,9 +82,38 @@
     color: var(--color-text);
     font-family: 'Open Sans', system-ui, sans-serif;
     transition: background-color 0.2s, color 0.2s;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   * {
     box-sizing: border-box;
+  }
+
+  /* Subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 10px;
+    border: 2px solid var(--color-bg);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border-hover);
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }

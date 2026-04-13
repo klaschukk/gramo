@@ -78,7 +78,7 @@ export default function Settings({ onBack }: Props) {
         <div className="max-w-md mx-auto space-y-6">
           {/* Focus Topics — personalization */}
           <div className="bg-[--color-card] border border-[--color-border] rounded-xl p-5">
-            <h2 className="text-xs font-heading font-semibold text-orange-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <h2 className="text-xs font-heading font-semibold text-[--color-focus] uppercase tracking-wider mb-3 flex items-center gap-2">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 23a7.5 7.5 0 0 0 7.5-7.5c0-4.5-3-7.5-4.5-9-1 2-2 3-3.5 3C10 9.5 9 7 8 4.5 6.5 7 4.5 10.5 4.5 15.5A7.5 7.5 0 0 0 12 23z"/></svg>
               Focus Topics
             </h2>
@@ -93,14 +93,14 @@ export default function Settings({ onBack }: Props) {
               placeholder="e.g. 7, 8, 38, 39, 40"
               className="w-full bg-[--color-bg] border border-[--color-border] rounded-lg px-4 py-2.5 text-sm font-mono
                          text-[--color-text] placeholder:text-[--color-text-faint]
-                         focus:outline-none focus:border-orange-500"
+                         focus:outline-none focus:border-[--color-focus]"
             />
             <div className="grid grid-cols-2 gap-2 mt-3">
               <button
                 type="button"
                 onClick={handleSaveFocus}
-                className="bg-orange-500 text-white py-2 rounded-lg font-heading text-xs font-semibold
-                           hover:bg-orange-600 transition-colors cursor-pointer"
+                className="bg-[--color-focus] text-white py-2 rounded-lg font-heading text-xs font-semibold
+                           hover:opacity-90 transition-opacity cursor-pointer"
               >
                 {saved === 'focus' ? 'Saved!' : 'Save Focus'}
               </button>
@@ -108,7 +108,7 @@ export default function Settings({ onBack }: Props) {
                 type="button"
                 onClick={handleUseDefaults}
                 className="bg-[--color-muted] border border-[--color-border] text-[--color-text] py-2 rounded-lg font-heading text-xs
-                           hover:border-orange-500 transition-colors cursor-pointer"
+                           hover:border-[--color-focus] transition-colors cursor-pointer"
               >
                 Use B1 defaults
               </button>

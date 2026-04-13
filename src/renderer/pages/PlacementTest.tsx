@@ -98,7 +98,7 @@ export default function PlacementTest({ onComplete }: Props) {
       <div className="flex h-screen flex-col bg-[--color-bg]">
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="max-w-lg w-full space-y-6 text-center">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-[--color-primary] bg-opacity-10 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-[--color-primary-soft] flex items-center justify-center">
               <svg className="w-8 h-8 text-[--color-primary]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>

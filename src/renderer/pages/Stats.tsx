@@ -37,9 +37,9 @@ export default function Stats({ onBack }: Props) {
 
   function getHeatColor(minutes: number): string {
     if (minutes === 0) return 'bg-[--color-muted] border border-[--color-border]'
-    if (minutes < 10) return 'bg-[--color-primary] bg-opacity-20'
-    if (minutes < 20) return 'bg-[--color-primary] bg-opacity-40'
-    if (minutes < 40) return 'bg-[--color-primary] bg-opacity-70'
+    if (minutes < 10) return 'bg-[--color-primary]/20'
+    if (minutes < 20) return 'bg-[--color-primary]/40'
+    if (minutes < 40) return 'bg-[--color-primary]/70'
     return 'bg-[--color-primary]'
   }
 
@@ -48,7 +48,7 @@ export default function Stats({ onBack }: Props) {
   return (
     <div className="flex h-screen flex-col bg-[--color-bg]">
       <header className="px-6 py-3 border-b border-[--color-border] bg-[--color-card] flex items-center gap-3">
-        <button type="button" onClick={onBack} className="text-[--color-text-muted] hover:text-[--color-text] cursor-pointer">
+        <button type="button" title="Back" onClick={onBack} className="text-[--color-text-muted] hover:text-[--color-text] cursor-pointer">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -103,9 +103,9 @@ export default function Stats({ onBack }: Props) {
             <div className="flex items-center gap-2 mt-4 justify-end">
               <span className="text-[10px] text-[--color-text-faint]">Less</span>
               <div className="w-3 h-3 rounded-sm bg-[--color-muted] border border-[--color-border]" />
-              <div className="w-3 h-3 rounded-sm bg-[--color-primary] bg-opacity-20" />
-              <div className="w-3 h-3 rounded-sm bg-[--color-primary] bg-opacity-40" />
-              <div className="w-3 h-3 rounded-sm bg-[--color-primary] bg-opacity-70" />
+              <div className="w-3 h-3 rounded-sm bg-[--color-primary]/20" />
+              <div className="w-3 h-3 rounded-sm bg-[--color-primary]/40" />
+              <div className="w-3 h-3 rounded-sm bg-[--color-primary]/70" />
               <div className="w-3 h-3 rounded-sm bg-[--color-primary]" />
               <span className="text-[10px] text-[--color-text-faint]">More</span>
             </div>
