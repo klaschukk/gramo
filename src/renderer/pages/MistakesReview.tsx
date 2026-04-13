@@ -86,7 +86,7 @@ export default function MistakesReview({ onBack }: Props) {
   return (
     <div className="flex h-screen flex-col bg-[--color-bg]">
       <div className="h-1 bg-[--color-progress-bg]">
-        <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+        <div className="h-full bg-[--color-error] transition-all duration-300" style={{ width: `${progress}%` }} />
       </div>
 
       <header className="px-6 py-4 border-b border-[--color-border] bg-[--color-card]">
@@ -99,7 +99,7 @@ export default function MistakesReview({ onBack }: Props) {
           </button>
           <span className="text-[10px] text-[--color-text-faint]">Mistake {current + 1} / {exercises.length} · {resolved} resolved</span>
         </div>
-        <p className="text-xs font-heading font-semibold text-red-500 mt-1">Mistakes Review</p>
+        <p className="text-xs font-heading font-semibold text-[--color-error] mt-1">Mistakes Review</p>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-8">

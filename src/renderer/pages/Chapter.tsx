@@ -107,7 +107,7 @@ export default function Chapter({ chapterId, onBack }: Props) {
               </div>
 
               {/* Formula */}
-              <div className="bg-[--color-primary] bg-opacity-10 border border-[--color-primary] border-opacity-20 rounded-xl p-5">
+              <div className="bg-[--color-primary-soft] border border-[--color-primary]/30 rounded-xl p-5">
                 <h2 className="text-xs font-heading font-semibold text-[--color-primary] uppercase tracking-wider mb-3">Formula</h2>
                 <p className="text-lg font-heading font-semibold text-[--color-text] text-center py-2">
                   {lesson.formula}
@@ -123,7 +123,7 @@ export default function Chapter({ chapterId, onBack }: Props) {
                       key={i}
                       className={`flex items-start gap-3 px-4 py-3 rounded-lg border ${
                         ex.correct === false
-                          ? 'border-[--color-error] bg-[--color-error-bg] border-opacity-30'
+                          ? 'border-[--color-error]/40 bg-[--color-error-bg]'
                           : 'border-[--color-border] bg-[--color-card]'
                       }`}
                     >
@@ -261,10 +261,10 @@ function WritingSection({ chapterId, unitNumber, unitTitle, onBack }: { chapterI
         <div className="max-w-2xl mx-auto space-y-4">
           {/* Task prompt */}
           {prompt && (
-            <div className="bg-[--color-primary] bg-opacity-5 border border-[--color-primary] border-opacity-15 rounded-xl p-5">
+            <div className="bg-[--color-primary-soft] border border-[--color-primary]/20 rounded-xl p-5">
               <p className="text-xs text-[--color-primary] font-heading font-semibold uppercase tracking-wider mb-2">Your task</p>
               <p className="text-[15px] leading-6 text-[--color-text] mb-4">{prompt.prompt}</p>
-              <div className="pt-3 border-t border-[--color-primary] border-opacity-20">
+              <div className="pt-3 border-t border-[--color-primary]/20">
                 <p className="text-[10px] text-[--color-primary] font-heading font-semibold uppercase tracking-wider mb-2">Must include</p>
                 <ul className="space-y-1.5">
                   {prompt.checklist.map((item, i) => (

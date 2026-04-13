@@ -121,7 +121,7 @@ export default function Dashboard({ settings }: Props) {
           </div>
           <div className="flex items-center gap-2">
             {stats && stats.streak > 0 && (
-              <span className="flex items-center gap-1 text-xs font-medium text-orange-500 bg-orange-500 bg-opacity-10 px-2 py-1 rounded-lg">
+              <span className="flex items-center gap-1 text-xs font-medium text-[--color-focus] bg-[--color-focus-bg] px-2 py-1 rounded-lg">
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 23a7.5 7.5 0 0 0 7.5-7.5c0-4.5-3-7.5-4.5-9-1 2-2 3-3.5 3C10 9.5 9 7 8 4.5 6.5 7 4.5 10.5 4.5 15.5A7.5 7.5 0 0 0 12 23z"/></svg>
                 {stats.streak}
               </span>
@@ -190,7 +190,7 @@ export default function Dashboard({ settings }: Props) {
             {/* Focus Topics (weak areas from assessment) */}
             {focusTopics.length > 0 && (
               <div>
-                <h3 className="text-xs font-heading font-semibold text-orange-500 uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
+                <h3 className="text-xs font-heading font-semibold text-[--color-focus] uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 23a7.5 7.5 0 0 0 7.5-7.5c0-4.5-3-7.5-4.5-9-1 2-2 3-3.5 3C10 9.5 9 7 8 4.5 6.5 7 4.5 10.5 4.5 15.5A7.5 7.5 0 0 0 12 23z"/></svg>
                   Focus Topics — your weak spots
                 </h3>
@@ -202,11 +202,11 @@ export default function Dashboard({ settings }: Props) {
                       onClick={() => openUnit(entry.chapterId)}
                       className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all cursor-pointer
                         ${entry.completed
-                          ? 'border-[--color-success] border-opacity-40 bg-[--color-success-bg]'
-                          : 'border-orange-400 bg-orange-50 dark:bg-orange-950 dark:border-orange-800 hover:border-orange-500'}`}
+                          ? 'border-[--color-success]/50 bg-[--color-success-bg]'
+                          : 'border-[--color-focus-border] bg-[--color-focus-bg] hover:border-[--color-focus]'}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center text-sm font-heading font-bold shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[--color-focus] text-white flex items-center justify-center text-sm font-heading font-bold shrink-0">
                           {entry.unitNumber}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -217,7 +217,7 @@ export default function Dashboard({ settings }: Props) {
                           </p>
                         </div>
                         {!entry.completed && (
-                          <span className="text-[10px] font-semibold bg-orange-500 text-white px-2 py-1 rounded-md shrink-0">
+                          <span className="text-[10px] font-semibold bg-[--color-focus] text-white px-2 py-1 rounded-md shrink-0">
                             Priority
                           </span>
                         )}
@@ -233,12 +233,12 @@ export default function Dashboard({ settings }: Props) {
               <button
                 type="button"
                 onClick={() => openMistakesReview()}
-                className="w-full bg-red-50 dark:bg-red-950 border-2 border-red-300 dark:border-red-800 rounded-xl p-4 text-left
-                           hover:border-red-500 transition-colors cursor-pointer"
+                className="w-full bg-[--color-error-bg] border-2 border-[--color-error]/30 rounded-xl p-4 text-left
+                           hover:border-[--color-error] transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-red-500 bg-opacity-20 flex items-center justify-center shrink-0">
-                    <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="w-12 h-12 rounded-xl bg-[--color-error-bg] flex items-center justify-center shrink-0">
+                    <svg className="w-6 h-6 text-[--color-error]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -250,7 +250,7 @@ export default function Dashboard({ settings }: Props) {
                       Exercises you answered incorrectly — drill them to clear the list
                     </p>
                   </div>
-                  <svg className="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 text-[--color-error] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -284,7 +284,7 @@ export default function Dashboard({ settings }: Props) {
                           <p className="text-[11px] text-[--color-text-faint]">{entry.cefrLevel}</p>
                         </div>
                         {i === 0 && (
-                          <span className="text-[10px] font-medium bg-[--color-primary] bg-opacity-10 text-[--color-primary] px-2 py-1 rounded-md shrink-0">
+                          <span className="text-[10px] font-medium bg-[--color-primary-soft] text-[--color-primary] px-2 py-1 rounded-md shrink-0">
                             Next
                           </span>
                         )}
@@ -304,7 +304,7 @@ export default function Dashboard({ settings }: Props) {
                            hover:border-[--color-primary] transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[--color-primary] bg-opacity-10 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-[--color-primary-soft] flex items-center justify-center shrink-0">
                     <svg className="w-6 h-6 text-[--color-primary]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                     </svg>
@@ -369,8 +369,8 @@ export default function Dashboard({ settings }: Props) {
                       type="button"
                       key={entry.chapterId}
                       onClick={() => openUnit(entry.chapterId)}
-                      className="w-full text-left px-4 py-2.5 rounded-lg border border-[--color-accent] border-opacity-30 bg-[--color-success-bg]
-                                 hover:border-opacity-60 transition-colors cursor-pointer"
+                      className="w-full text-left px-4 py-2.5 rounded-lg border border-[--color-accent]/40 bg-[--color-success-bg]
+                                 hover:border-[--color-accent] transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 min-w-0">
@@ -488,7 +488,7 @@ function UnitRow({ entry, onClick }: { entry: CurriculumEntry; onClick: () => vo
       onClick={onClick}
       className={`w-full text-left px-4 py-2.5 rounded-lg border transition-colors cursor-pointer
         ${entry.completed
-          ? 'border-[--color-accent] border-opacity-40 bg-[--color-success-bg]'
+          ? 'border-[--color-accent]/50 bg-[--color-success-bg]'
           : 'border-[--color-border] bg-[--color-card] hover:border-[--color-border-hover] hover:bg-[--color-muted]'
         }`}
     >
