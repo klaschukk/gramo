@@ -2,6 +2,7 @@ import Database from 'better-sqlite3'
 import path from 'path'
 import { app } from 'electron'
 import { exercises as exercisesData } from './exercises-data'
+import { vocabularySeed } from './vocabulary-data'
 
 let db: Database.Database
 
@@ -103,10 +104,40 @@ function runMigrations(db: Database.Database): void {
       text TEXT NOT NULL,
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS vocabulary_words (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      word TEXT NOT NULL,
+      translation TEXT NOT NULL,
+      example TEXT NOT NULL,
+      cefr_level TEXT NOT NULL,
+      topic TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE TABLE IF NOT EXISTS vocab_progress (
+      word_id INTEGER PRIMARY KEY REFERENCES vocabulary_words(id),
+      ease REAL NOT NULL DEFAULT 2.5,
+      interval INTEGER NOT NULL DEFAULT 0,
+      repetitions INTEGER NOT NULL DEFAULT 0,
+      next_review TEXT NOT NULL DEFAULT (date('now')),
+      last_review TEXT,
+      lapses INTEGER NOT NULL DEFAULT 0
+    );
   `)
+
+  // Placement test sections — migration for existing DBs
+  try { db.exec("ALTER TABLE placement_questions ADD COLUMN section TEXT NOT NULL DEFAULT 'grammar'") } catch { /* column exists */ }
+  try { db.exec("ALTER TABLE placement_questions ADD COLUMN passage TEXT") } catch { /* column exists */ }
+
+  // Force re-seed placement if old v1.0 schema (no 'reading' section)
+  const hasReading = (db.prepare("SELECT COUNT(*) as c FROM placement_questions WHERE section = 'reading'").get() as { c: number }).c
+  if (hasReading === 0) {
+    db.exec('DELETE FROM placement_questions')
+  }
 
   seedPlacementQuestions(db)
   seedStaticExercises(db)
+  seedVocabulary(db)
 }
 
 function seedPlacementQuestions(db: Database.Database): void {
@@ -218,15 +249,174 @@ function seedPlacementQuestions(db: Database.Database): void {
     { level: 'C2', q: 'Such ___ his reputation that nobody dared question him.', opts: ['was', 'is', 'had', 'being'], a: 'was', topic: 'such + inversion' },
   ]
 
-  const insert = db.prepare(
-    'INSERT INTO placement_questions (cefr_level, question, options, answer, topic) VALUES (?, ?, ?, ?, ?)'
+  const insertGrammar = db.prepare(
+    "INSERT INTO placement_questions (cefr_level, section, question, options, answer, topic) VALUES (?, 'grammar', ?, ?, ?, ?)"
   )
   const insertMany = db.transaction((qs: typeof questions) => {
     for (const q of qs) {
-      insert.run(q.level, q.q, JSON.stringify(q.opts), q.a, q.topic)
+      insertGrammar.run(q.level, q.q, JSON.stringify(q.opts), q.a, q.topic)
     }
   })
   insertMany(questions)
+
+  // Insert additional sections: reading, error, cloze
+  const insertSection = db.prepare(
+    'INSERT INTO placement_questions (cefr_level, section, passage, question, options, answer, topic) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  )
+  const insertSectionMany = db.transaction((items: SectionQuestion[]) => {
+    for (const q of items) {
+      insertSection.run(q.level, q.section, q.passage ?? null, q.q, JSON.stringify(q.opts), q.a, q.topic)
+    }
+  })
+  insertSectionMany(READING_QUESTIONS)
+  insertSectionMany(ERROR_QUESTIONS)
+  insertSectionMany(CLOZE_QUESTIONS)
+}
+
+interface SectionQuestion {
+  level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+  section: 'reading' | 'error' | 'cloze'
+  passage?: string
+  q: string
+  opts: string[]
+  a: string
+  topic: string
+}
+
+// ===== READING COMPREHENSION (3 passages × 3 questions = 9) =====
+const READING_A2 = `Emma lives in a small town in France with her husband and two children. She works part-time as a nurse at the local hospital. Every morning she takes her kids to school by bicycle before going to work. In the evenings, she enjoys cooking dinner for her family and reading books. On weekends, the whole family usually goes hiking in the nearby mountains. Emma says she loves her quiet life and doesn't want to move to a big city.`
+
+const READING_B1 = `The traditional office is disappearing. Since 2020, more and more companies have adopted remote work as a permanent option, not just a temporary solution. A recent survey showed that 65% of workers in Europe would rather quit their job than return to the office five days a week. Employers have noticed that remote workers are often more productive, although they sometimes feel isolated. To solve this problem, many companies now organize regular in-person meetings and online social events. The challenge is finding the right balance between flexibility and connection.`
+
+const READING_B2 = `The rise of artificial intelligence has sparked heated debates about its impact on employment. While pessimists argue that millions of jobs will be lost to automation, optimists point out that previous technological revolutions have ultimately created more jobs than they destroyed. The truth, as usual, probably lies somewhere in between. Routine tasks are indeed vanishing, but the demand for creative, emotional, and interpersonal skills is growing. What is certain is that the workforce of the future will need to continuously adapt and learn new skills. Those who resist change may find themselves left behind, while those who embrace it will discover unprecedented opportunities.`
+
+const READING_QUESTIONS: SectionQuestion[] = [
+  // A2 passage
+  { level: 'A2', section: 'reading', passage: READING_A2, q: 'How does Emma travel to work?', opts: ['By car', 'By bicycle', 'On foot', 'By bus'], a: 'By bicycle', topic: 'reading detail' },
+  { level: 'A2', section: 'reading', passage: READING_A2, q: 'What does Emma do on weekends?', opts: ['She works at the hospital', 'She reads books alone', 'She goes hiking with her family', 'She visits the city'], a: 'She goes hiking with her family', topic: 'reading detail' },
+  { level: 'A2', section: 'reading', passage: READING_A2, q: 'How does Emma feel about her life?', opts: ['She wants to move to a city', 'She is happy and satisfied', 'She is bored', 'She is tired of her job'], a: 'She is happy and satisfied', topic: 'reading inference' },
+
+  // B1 passage
+  { level: 'B1', section: 'reading', passage: READING_B1, q: 'According to the text, when did remote work become more common?', opts: ['Before 2020', 'Since 2020', 'Only in 2023', 'It has always been common'], a: 'Since 2020', topic: 'reading detail' },
+  { level: 'B1', section: 'reading', passage: READING_B1, q: 'What is the main problem for remote workers mentioned in the text?', opts: ['Lower productivity', 'Feeling isolated', 'Too many meetings', 'Technical issues'], a: 'Feeling isolated', topic: 'reading detail' },
+  { level: 'B1', section: 'reading', passage: READING_B1, q: 'What is the author\'s overall attitude towards remote work?', opts: ['Strongly against it', 'Balanced — sees benefits and challenges', 'Enthusiastically in favour', 'Indifferent'], a: 'Balanced — sees benefits and challenges', topic: 'reading inference' },
+
+  // B2 passage
+  { level: 'B2', section: 'reading', passage: READING_B2, q: 'What do optimists say about AI and jobs?', opts: ['Most jobs will be lost', 'New technology usually creates more jobs than it destroys', 'AI will not affect jobs', 'Workers should not worry'], a: 'New technology usually creates more jobs than it destroys', topic: 'reading detail' },
+  { level: 'B2', section: 'reading', passage: READING_B2, q: 'Which type of skills are growing in demand?', opts: ['Routine manual skills', 'Creative and interpersonal skills', 'Data-entry skills', 'Repetitive task skills'], a: 'Creative and interpersonal skills', topic: 'reading detail' },
+  { level: 'B2', section: 'reading', passage: READING_B2, q: 'What does the author imply about workers who "resist change"?', opts: ['They will succeed', 'They risk being left behind', 'They will earn more', 'They are making a wise choice'], a: 'They risk being left behind', topic: 'reading inference' },
+]
+
+// ===== ERROR CORRECTION (12 — pick the correct version) =====
+const ERROR_QUESTIONS: SectionQuestion[] = [
+  { level: 'A1', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'She don\'t like fish.',
+    'She doesn\'t likes fish.',
+    'She doesn\'t like fish.',
+    'She not like fish.',
+  ], a: 'She doesn\'t like fish.', topic: 'present simple negative' },
+  { level: 'A1', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'There is three cats in the garden.',
+    'There are three cats in the garden.',
+    'It are three cats in the garden.',
+    'There have three cats in the garden.',
+  ], a: 'There are three cats in the garden.', topic: 'there is/are' },
+  { level: 'A2', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'I am living here since 2018.',
+    'I live here since 2018.',
+    'I have lived here since 2018.',
+    'I lived here since 2018.',
+  ], a: 'I have lived here since 2018.', topic: 'present perfect + since' },
+  { level: 'A2', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'She is more taller than me.',
+    'She is tallest than me.',
+    'She is taller than me.',
+    'She is more tall than me.',
+  ], a: 'She is taller than me.', topic: 'comparatives' },
+  { level: 'B1', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'If I would have money, I would travel.',
+    'If I had money, I would travel.',
+    'If I have money, I would travel.',
+    'If I will have money, I travel.',
+  ], a: 'If I had money, I would travel.', topic: 'second conditional' },
+  { level: 'B1', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'He suggested to go to the cinema.',
+    'He suggested going to the cinema.',
+    'He suggested that go to the cinema.',
+    'He suggested we going to the cinema.',
+  ], a: 'He suggested going to the cinema.', topic: 'suggest + -ing' },
+  { level: 'B1', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'Despite of the rain, we went out.',
+    'Despite the rain, we went out.',
+    'Although the rain, we went out.',
+    'In spite the rain, we went out.',
+  ], a: 'Despite the rain, we went out.', topic: 'despite / in spite of' },
+  { level: 'B2', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'If I had known, I would tell you.',
+    'If I would have known, I had told you.',
+    'If I had known, I would have told you.',
+    'If I knew, I would told you.',
+  ], a: 'If I had known, I would have told you.', topic: 'third conditional' },
+  { level: 'B2', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'She denied to steal the money.',
+    'She denied stealing the money.',
+    'She denied for stealing the money.',
+    'She denied that steal the money.',
+  ], a: 'She denied stealing the money.', topic: 'verb patterns' },
+  { level: 'B2', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'I\'m looking forward to see you.',
+    'I\'m looking forward seeing you.',
+    'I\'m looking forward to seeing you.',
+    'I\'m look forward to see you.',
+  ], a: 'I\'m looking forward to seeing you.', topic: 'look forward to + -ing' },
+  { level: 'C1', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'No sooner he arrived than it started raining.',
+    'No sooner did he arrived than it started raining.',
+    'No sooner had he arrived than it started raining.',
+    'No sooner he had arrived than it started raining.',
+  ], a: 'No sooner had he arrived than it started raining.', topic: 'inversion' },
+  { level: 'C1', section: 'error', q: 'Choose the correct sentence:', opts: [
+    'Hardly had I sat down when the phone rang.',
+    'Hardly I had sat down when the phone rang.',
+    'Hardly did I sit down when the phone rang.',
+    'Hardly I sat down when the phone rang.',
+  ], a: 'Hardly had I sat down when the phone rang.', topic: 'inversion with hardly' },
+]
+
+// ===== CLOZE (2 passages × 5 blanks = 10) =====
+const CLOZE_B1 = `Last summer, I went on holiday (1) ___ Italy with my family. We stayed (2) ___ a small hotel near the beach. The weather was fantastic, and we spent most of our time (3) ___ swimming and sunbathing. One day, we decided to visit a nearby town that was famous (4) ___ its ancient ruins. We hired a local guide who told us many interesting stories. By the end of the trip, I had taken over 500 photos and made many new friends. I'm really looking forward (5) ___ going back next year.`
+
+const CLOZE_B2 = `Artificial intelligence is transforming the way we work. Many routine tasks, which (1) ___ to take hours, can now be completed in minutes. However, this rapid progress (2) ___ raised concerns about job security. Some workers fear that their skills will become obsolete, while others are (3) ___ confident that new opportunities will emerge. The key, experts say, is adaptability. Those who are willing (4) ___ learn continuously will thrive, (5) ___ those who resist change may struggle to keep up.`
+
+const CLOZE_QUESTIONS: SectionQuestion[] = [
+  // B1 passage, 5 blanks
+  { level: 'B1', section: 'cloze', passage: CLOZE_B1, q: 'Blank (1): I went on holiday ___ Italy.', opts: ['to', 'in', 'at', 'on'], a: 'to', topic: 'prepositions of direction' },
+  { level: 'B1', section: 'cloze', passage: CLOZE_B1, q: 'Blank (2): We stayed ___ a small hotel.', opts: ['on', 'in', 'to', 'at'], a: 'in', topic: 'prepositions of place' },
+  { level: 'B1', section: 'cloze', passage: CLOZE_B1, q: 'Blank (3): We spent most of our time ___ swimming.', opts: ['to', 'for', '-', 'in'], a: '-', topic: 'spend time + -ing' },
+  { level: 'B1', section: 'cloze', passage: CLOZE_B1, q: 'Blank (4): famous ___ its ancient ruins.', opts: ['of', 'for', 'by', 'with'], a: 'for', topic: 'famous for' },
+  { level: 'B1', section: 'cloze', passage: CLOZE_B1, q: 'Blank (5): looking forward ___ going back.', opts: ['for', 'to', 'at', 'on'], a: 'to', topic: 'look forward to' },
+
+  // B2 passage, 5 blanks
+  { level: 'B2', section: 'cloze', passage: CLOZE_B2, q: 'Blank (1): tasks which ___ to take hours.', opts: ['used', 'use', 'using', 'are used'], a: 'used', topic: 'used to' },
+  { level: 'B2', section: 'cloze', passage: CLOZE_B2, q: 'Blank (2): this rapid progress ___ raised concerns.', opts: ['have', 'has', 'had', 'having'], a: 'has', topic: 'present perfect' },
+  { level: 'B2', section: 'cloze', passage: CLOZE_B2, q: 'Blank (3): others are ___ confident that new opportunities...', opts: ['more', 'most', 'much', 'very'], a: 'more', topic: 'comparative adverbs' },
+  { level: 'B2', section: 'cloze', passage: CLOZE_B2, q: 'Blank (4): those who are willing ___ learn continuously.', opts: ['for', 'on', 'to', 'in'], a: 'to', topic: 'willing to + infinitive' },
+  { level: 'B2', section: 'cloze', passage: CLOZE_B2, q: 'Blank (5): will thrive, ___ those who resist change.', opts: ['while', 'during', 'because', 'unless'], a: 'while', topic: 'linking words' },
+]
+
+function seedVocabulary(db: Database.Database): void {
+  const count = (db.prepare('SELECT COUNT(*) as c FROM vocabulary_words').get() as { c: number }).c
+  if (count > 0) return
+
+  const insert = db.prepare(
+    'INSERT INTO vocabulary_words (word, translation, example, cefr_level, topic) VALUES (?, ?, ?, ?, ?)'
+  )
+  const insertMany = db.transaction((words: typeof vocabularySeed) => {
+    for (const w of words) {
+      insert.run(w.word, w.translation, w.example, w.cefrLevel, w.topic)
+    }
+  })
+  insertMany(vocabularySeed)
 }
 
 // Seed exercises from exercises-data.ts

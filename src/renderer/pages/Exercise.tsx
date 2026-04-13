@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Exercise } from '@shared/types'
 
 interface Props {
@@ -36,6 +36,7 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
         score,
         attempts: 1,
       })
+      await window.api.logStudyTime(0, exercises.length)
       onComplete()
     } else {
       setCurrent((c) => c + 1)
@@ -43,6 +44,21 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
       setAnswerState('idle')
     }
   }
+
+  // Keyboard shortcuts: 1-4 select options, Enter goes next, Escape exits
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { onBack(); return }
+      if (e.key === 'Enter' && answerState !== 'idle') { handleNext(); return }
+      if (answerState !== 'idle' || !ex.options) return
+      const num = parseInt(e.key)
+      if (num >= 1 && num <= ex.options.length) {
+        handleSelect(ex.options[num - 1])
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  })
 
   const progress = Math.round(((current + 1) / exercises.length) * 100)
 
@@ -57,16 +73,20 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
       </div>
 
       <header className="px-6 py-4 border-b border-[--color-border] bg-[--color-card]">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-sm text-[--color-text-muted] hover:text-[--color-text] flex items-center gap-1 cursor-pointer"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to lesson
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            title="Back to lesson (Esc)"
+            onClick={onBack}
+            className="text-sm text-[--color-text-muted] hover:text-[--color-text] flex items-center gap-1 cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to lesson
+          </button>
+          <span className="text-[10px] text-[--color-text-faint]">Press 1-4 to answer, Enter to continue</span>
+        </div>
         <p className="text-xs text-[--color-text-faint] mt-1">
           Exercise {current + 1} of {exercises.length}
         </p>
@@ -92,9 +112,13 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
                 } else {
                   cls += 'border-[--color-border] bg-[--color-card] text-[--color-text] hover:border-[--color-border-hover] hover:bg-[--color-muted]'
                 }
+                const idx = ex.options!.indexOf(opt) + 1
                 return (
                   <button type="button" key={opt} onClick={() => handleSelect(opt)} className={cls}>
-                    {opt}
+                    <span className="inline-flex items-center gap-2.5">
+                      <span className="text-[10px] font-mono text-[--color-text-faint] border border-[--color-border] rounded w-5 h-5 flex items-center justify-center shrink-0">{idx}</span>
+                      {opt}
+                    </span>
                   </button>
                 )
               })}

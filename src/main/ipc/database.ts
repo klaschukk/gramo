@@ -12,7 +12,10 @@ import type {
   PlacementResult,
   StudyStats,
   CEFRLevel,
+  VocabCard,
+  VocabStats,
 } from '../../shared/types'
+import { sm2, addDays, today } from '../services/spaced-repetition'
 
 // SQL column aliases to map snake_case → camelCase
 const CHAPTER_COLS = `id, book_id as bookId, unit_number as unitNumber, title, topic,
@@ -66,7 +69,17 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('db:getPlacementQuestions', (): PlacementQuestion[] => {
     const db = getDb()
     const rows = db
-      .prepare('SELECT id, cefr_level as cefrLevel, question, options, answer, topic FROM placement_questions ORDER BY cefr_level, id')
+      .prepare(`SELECT id, cefr_level as cefrLevel, section, passage, question, options, answer, topic
+                FROM placement_questions
+                ORDER BY
+                  CASE section
+                    WHEN 'grammar' THEN 1
+                    WHEN 'reading' THEN 2
+                    WHEN 'error' THEN 3
+                    WHEN 'cloze' THEN 4
+                  END,
+                  cefr_level,
+                  id`)
       .all() as (Omit<PlacementQuestion, 'options'> & { options: string })[]
     return rows.map((r) => ({ ...r, options: JSON.parse(r.options) }))
   })
@@ -193,5 +206,114 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
     const db = getDb()
     const row = db.prepare('SELECT text FROM essays WHERE chapter_id = ?').get(chapterId) as { text: string } | undefined
     return row?.text ?? null
+  })
+
+  // ===== Vocabulary with spaced repetition =====
+  ipcMain.handle('db:getVocabDue', (_e, limit = 20): VocabCard[] => {
+    const db = getDb()
+    const t = today()
+
+    // 1) Cards already in progress that are due (next_review <= today)
+    const dueRows = db.prepare(`
+      SELECT w.id, w.word, w.translation, w.example, w.cefr_level as cefrLevel, w.topic,
+             p.ease, p.interval, p.repetitions, p.next_review as nextReview, p.last_review as lastReview, p.lapses
+      FROM vocabulary_words w
+      INNER JOIN vocab_progress p ON p.word_id = w.id
+      WHERE p.next_review <= ?
+      ORDER BY p.next_review ASC
+      LIMIT ?
+    `).all(t, limit) as Array<VocabCard & { ease: number; interval: number; repetitions: number; nextReview: string; lastReview: string | null; lapses: number }>
+
+    const dueCards: VocabCard[] = dueRows.map((r) => ({
+      id: r.id,
+      word: r.word,
+      translation: r.translation,
+      example: r.example,
+      cefrLevel: r.cefrLevel,
+      topic: r.topic,
+      progress: {
+        wordId: r.id,
+        ease: r.ease,
+        interval: r.interval,
+        repetitions: r.repetitions,
+        nextReview: r.nextReview,
+        lastReview: r.lastReview,
+        lapses: r.lapses,
+      },
+    }))
+
+    // 2) Fill remaining slots with new words the user hasn't seen yet
+    const remaining = limit - dueCards.length
+    if (remaining > 0) {
+      const newRows = db.prepare(`
+        SELECT w.id, w.word, w.translation, w.example, w.cefr_level as cefrLevel, w.topic
+        FROM vocabulary_words w
+        LEFT JOIN vocab_progress p ON p.word_id = w.id
+        WHERE p.word_id IS NULL
+        ORDER BY w.cefr_level, RANDOM()
+        LIMIT ?
+      `).all(remaining) as VocabCard[]
+      dueCards.push(...newRows.map((r) => ({ ...r, progress: null })))
+    }
+
+    return dueCards
+  })
+
+  ipcMain.handle('db:getVocabStats', (): VocabStats => {
+    const db = getDb()
+    const t = today()
+    const total = (db.prepare('SELECT COUNT(*) as c FROM vocabulary_words').get() as { c: number }).c
+    const learned = (db.prepare('SELECT COUNT(*) as c FROM vocab_progress WHERE repetitions > 0').get() as { c: number }).c
+    const dueProgressed = (db.prepare('SELECT COUNT(*) as c FROM vocab_progress WHERE next_review <= ?').get(t) as { c: number }).c
+    const dueNew = (db.prepare(`
+      SELECT COUNT(*) as c FROM vocabulary_words w
+      LEFT JOIN vocab_progress p ON p.word_id = w.id
+      WHERE p.word_id IS NULL
+    `).get() as { c: number }).c
+    const reviewedToday = (db.prepare('SELECT COUNT(*) as c FROM vocab_progress WHERE last_review = ?').get(t) as { c: number }).c
+    return {
+      total,
+      learned,
+      due: dueProgressed + Math.min(dueNew, 20),
+      newToday: dueNew,
+      reviewedToday,
+    }
+  })
+
+  ipcMain.handle('db:reviewVocab', (_e, wordId: number, quality: 0 | 2 | 4 | 5): void => {
+    const db = getDb()
+    const t = today()
+    const prev = db.prepare('SELECT ease, interval, repetitions, lapses FROM vocab_progress WHERE word_id = ?').get(wordId) as
+      | { ease: number; interval: number; repetitions: number; lapses: number }
+      | undefined
+
+    const baseline = prev ?? { ease: 2.5, interval: 0, repetitions: 0, lapses: 0 }
+    const next = sm2(quality, baseline)
+    const nextReview = addDays(t, next.interval)
+    const lapses = quality === 0 ? baseline.lapses + 1 : baseline.lapses
+
+    db.prepare(`
+      INSERT INTO vocab_progress (word_id, ease, interval, repetitions, next_review, last_review, lapses)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(word_id) DO UPDATE SET
+        ease = excluded.ease,
+        interval = excluded.interval,
+        repetitions = excluded.repetitions,
+        next_review = excluded.next_review,
+        last_review = excluded.last_review,
+        lapses = excluded.lapses
+    `).run(wordId, next.ease, next.interval, next.repetitions, nextReview, t, lapses)
+  })
+
+  ipcMain.handle('db:getVocabByTopic', (): { topic: string; total: number; learned: number }[] => {
+    const db = getDb()
+    return db.prepare(`
+      SELECT w.topic, COUNT(*) as total,
+             SUM(CASE WHEN p.repetitions > 0 THEN 1 ELSE 0 END) as learned
+      FROM vocabulary_words w
+      LEFT JOIN vocab_progress p ON p.word_id = w.id
+      GROUP BY w.topic
+      ORDER BY w.cefr_level, w.topic
+    `).all() as { topic: string; total: number; learned: number }[]
   })
 }
