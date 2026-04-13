@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Chapter as ChapterType, Exercise } from '@shared/types'
 import ExercisePage from './Exercise'
+import SpeakButton from '../components/SpeakButton'
 
 interface Props {
   chapterId: number
@@ -136,13 +137,14 @@ export default function Chapter({ chapterId, onBack }: Props) {
                           </svg>
                         )}
                       </span>
-                      <p className={`text-sm leading-6 ${
+                      <p className={`text-sm leading-6 flex-1 ${
                         ex.correct === false
                           ? 'text-[--color-error] line-through'
                           : 'text-[--color-text]'
                       }`}>
                         {ex.sentence}
                       </p>
+                      {ex.correct !== false && <SpeakButton text={ex.sentence} />}
                     </div>
                   ))}
                 </div>

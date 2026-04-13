@@ -53,10 +53,43 @@ export interface UserProgress {
 export interface PlacementQuestion {
   id: number
   cefrLevel: CEFRLevel
+  section: 'grammar' | 'reading' | 'error' | 'cloze'
+  passage: string | null
   question: string
   options: string[]
   answer: string
   topic: string
+}
+
+export interface VocabWord {
+  id: number
+  word: string
+  translation: string
+  example: string
+  cefrLevel: CEFRLevel
+  topic: string
+}
+
+export interface VocabProgress {
+  wordId: number
+  ease: number
+  interval: number
+  repetitions: number
+  nextReview: string
+  lastReview: string | null
+  lapses: number
+}
+
+export interface VocabCard extends VocabWord {
+  progress: VocabProgress | null
+}
+
+export interface VocabStats {
+  total: number
+  learned: number
+  due: number
+  newToday: number
+  reviewedToday: number
 }
 
 export interface PlacementResult {
@@ -128,4 +161,10 @@ export interface GramoAPI {
   // Writing essays
   saveEssay: (chapterId: number, text: string) => Promise<void>
   getEssay: (chapterId: number) => Promise<string | null>
+
+  // Vocabulary
+  getVocabDue: (limit?: number) => Promise<VocabCard[]>
+  getVocabStats: () => Promise<VocabStats>
+  reviewVocab: (wordId: number, quality: 0 | 2 | 4 | 5) => Promise<void>
+  getVocabByTopic: () => Promise<{ topic: string; total: number; learned: number }[]>
 }
