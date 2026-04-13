@@ -92,6 +92,12 @@ export interface VocabStats {
   reviewedToday: number
 }
 
+export interface WritingPrompt {
+  prompt: string
+  checklist: string[]
+  minWords: number
+}
+
 export interface PlacementResult {
   level: CEFRLevel
   score: number
@@ -104,6 +110,8 @@ export interface UserSettings {
   activeBookId: number | null
   theme: 'light' | 'dark'
   dailyGoalMinutes: number
+  focusUnits: number[]
+  assessmentNotes: string | null
 }
 
 export interface CurriculumEntry {
@@ -161,10 +169,17 @@ export interface GramoAPI {
   // Writing essays
   saveEssay: (chapterId: number, text: string) => Promise<void>
   getEssay: (chapterId: number) => Promise<string | null>
+  getWritingPrompt: (unitNumber: number) => Promise<WritingPrompt>
 
   // Vocabulary
   getVocabDue: (limit?: number) => Promise<VocabCard[]>
   getVocabStats: () => Promise<VocabStats>
   reviewVocab: (wordId: number, quality: 0 | 2 | 4 | 5) => Promise<void>
   getVocabByTopic: () => Promise<{ topic: string; total: number; learned: number }[]>
+
+  // Mistakes
+  logMistake: (exerciseId: number, userAnswer: string) => Promise<void>
+  resolveMistake: (exerciseId: number) => Promise<void>
+  getMistakes: (limit?: number) => Promise<Exercise[]>
+  getMistakesCount: () => Promise<number>
 }

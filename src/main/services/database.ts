@@ -123,6 +123,14 @@ function runMigrations(db: Database.Database): void {
       last_review TEXT,
       lapses INTEGER NOT NULL DEFAULT 0
     );
+
+    CREATE TABLE IF NOT EXISTS mistakes (
+      exercise_id INTEGER PRIMARY KEY REFERENCES exercises(id),
+      user_answer TEXT,
+      attempts INTEGER NOT NULL DEFAULT 1,
+      last_wrong_at TEXT NOT NULL DEFAULT (datetime('now')),
+      resolved_at TEXT
+    );
   `)
 
   // Placement test sections — migration for existing DBs
@@ -405,8 +413,13 @@ const CLOZE_QUESTIONS: SectionQuestion[] = [
 ]
 
 function seedVocabulary(db: Database.Database): void {
-  const count = (db.prepare('SELECT COUNT(*) as c FROM vocabulary_words').get() as { c: number }).c
-  if (count > 0) return
+  // Upsert-style: insert only words that don't exist yet (by word + topic combo).
+  // This lets us add new words in updates without wiping user progress.
+  const existing = db.prepare('SELECT word, topic FROM vocabulary_words').all() as { word: string; topic: string }[]
+  const existingSet = new Set(existing.map((e) => `${e.word}::${e.topic}`))
+
+  const toInsert = vocabularySeed.filter((w) => !existingSet.has(`${w.word}::${w.topic}`))
+  if (toInsert.length === 0) return
 
   const insert = db.prepare(
     'INSERT INTO vocabulary_words (word, translation, example, cefr_level, topic) VALUES (?, ?, ?, ?, ?)'
@@ -416,7 +429,7 @@ function seedVocabulary(db: Database.Database): void {
       insert.run(w.word, w.translation, w.example, w.cefrLevel, w.topic)
     }
   })
-  insertMany(vocabularySeed)
+  insertMany(toInsert)
 }
 
 // Seed exercises from exercises-data.ts
