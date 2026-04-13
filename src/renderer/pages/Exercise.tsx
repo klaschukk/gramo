@@ -22,9 +22,16 @@ export default function ExercisePage({ chapterId, exercises, onBack, onComplete 
   function handleSelect(opt: string) {
     if (answerState !== 'idle') return
     setSelected(opt)
-    const correct = opt === ex.answer
+    const correct = opt.trim().toLowerCase() === ex.answer.trim().toLowerCase()
     setAnswerState(correct ? 'correct' : 'wrong')
-    if (correct) setCorrectCount((c) => c + 1)
+    if (correct) {
+      setCorrectCount((c) => c + 1)
+      // If this exercise was previously a mistake, resolve it
+      window.api.resolveMistake(ex.id)
+    } else {
+      // Log this as a mistake to practice later
+      window.api.logMistake(ex.id, opt)
+    }
   }
 
   async function handleNext() {

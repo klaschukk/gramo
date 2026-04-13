@@ -36,6 +36,7 @@ export default function App() {
       setSettings({
         currentLevel: 'A2', activeBookId: 1,
         theme: 'light', dailyGoalMinutes: 30,
+        focusUnits: [], assessmentNotes: null,
       })
     })
   }, [])

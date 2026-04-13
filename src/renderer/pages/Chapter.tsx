@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Chapter as ChapterType, Exercise } from '@shared/types'
+import type { Chapter as ChapterType, Exercise, WritingPrompt } from '@shared/types'
 import ExercisePage from './Exercise'
 import SpeakButton from '../components/SpeakButton'
 
@@ -61,6 +61,7 @@ export default function Chapter({ chapterId, onBack }: Props) {
     return (
       <WritingSection
         chapterId={chapterId}
+        unitNumber={chapter.unitNumber}
         unitTitle={chapter.title}
         onBack={() => setView('content')}
       />
@@ -209,17 +210,22 @@ export default function Chapter({ chapterId, onBack }: Props) {
 }
 
 // ===== Writing Section =====
-function WritingSection({ chapterId, unitTitle, onBack }: { chapterId: number; unitTitle: string; onBack: () => void }) {
+function WritingSection({ chapterId, unitNumber, unitTitle, onBack }: { chapterId: number; unitNumber: number; unitTitle: string; onBack: () => void }) {
   const [text, setText] = useState('')
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [prompt, setPrompt] = useState<WritingPrompt | null>(null)
 
   useEffect(() => {
-    window.api.getEssay(chapterId).then((essay) => {
+    Promise.all([
+      window.api.getEssay(chapterId),
+      window.api.getWritingPrompt(unitNumber),
+    ]).then(([essay, p]) => {
       if (essay) setText(essay)
+      setPrompt(p)
       setLoading(false)
     })
-  }, [chapterId])
+  }, [chapterId, unitNumber])
 
   async function handleSave() {
     await window.api.saveEssay(chapterId, text)
@@ -246,23 +252,34 @@ function WritingSection({ chapterId, unitTitle, onBack }: { chapterId: number; u
           </button>
           <h1 className="text-xl font-heading font-bold text-[--color-text]">Writing Practice</h1>
           <p className="text-sm text-[--color-text-muted] mt-1">
-            Write a short text using the grammar from <span className="text-[--color-primary] font-medium">{unitTitle}</span>
+            <span className="text-[--color-primary] font-medium">Unit {unitNumber}: {unitTitle}</span>
           </p>
         </div>
       </header>
 
       <main className="flex-1 overflow-y-auto px-6 py-6">
         <div className="max-w-2xl mx-auto space-y-4">
-          {/* Tips */}
-          <div className="bg-[--color-primary] bg-opacity-5 border border-[--color-primary] border-opacity-15 rounded-xl p-4">
-            <p className="text-xs text-[--color-primary] font-heading font-semibold uppercase tracking-wider mb-2">Tips</p>
-            <ul className="space-y-1 text-sm text-[--color-text-muted]">
-              <li>• Try to use the grammar rules you just learned</li>
-              <li>• Write 5-10 sentences about any topic</li>
-              <li>• Focus on accuracy over complexity</li>
-              <li>• Re-read your text and check for mistakes</li>
-            </ul>
-          </div>
+          {/* Task prompt */}
+          {prompt && (
+            <div className="bg-[--color-primary] bg-opacity-5 border border-[--color-primary] border-opacity-15 rounded-xl p-5">
+              <p className="text-xs text-[--color-primary] font-heading font-semibold uppercase tracking-wider mb-2">Your task</p>
+              <p className="text-[15px] leading-6 text-[--color-text] mb-4">{prompt.prompt}</p>
+              <div className="pt-3 border-t border-[--color-primary] border-opacity-20">
+                <p className="text-[10px] text-[--color-primary] font-heading font-semibold uppercase tracking-wider mb-2">Must include</p>
+                <ul className="space-y-1.5">
+                  {prompt.checklist.map((item, i) => (
+                    <li key={i} className="text-xs text-[--color-text-muted] flex items-start gap-2">
+                      <svg className="w-3.5 h-3.5 text-[--color-primary] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[10px] text-[--color-text-faint] mt-3">Aim for at least {prompt.minWords} words</p>
+              </div>
+            </div>
+          )}
 
           {/* Text area */}
           {!loading && (
@@ -281,7 +298,10 @@ function WritingSection({ chapterId, unitTitle, onBack }: { chapterId: number; u
 
       <footer className="px-6 py-4 border-t border-[--color-border] bg-[--color-card]">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <span className="text-xs text-[--color-text-faint]">{wordCount} words</span>
+          <span className={`text-xs ${prompt && wordCount >= prompt.minWords ? 'text-[--color-success] font-semibold' : 'text-[--color-text-faint]'}`}>
+            {wordCount} words{prompt && ` / ${prompt.minWords} min`}
+            {prompt && wordCount >= prompt.minWords && ' ✓'}
+          </span>
           <button
             type="button"
             onClick={handleSave}

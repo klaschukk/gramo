@@ -21,12 +21,19 @@ const api: GramoAPI = {
   // Writing essays
   saveEssay: (chapterId, text) => ipcRenderer.invoke('db:saveEssay', chapterId, text),
   getEssay: (chapterId) => ipcRenderer.invoke('db:getEssay', chapterId),
+  getWritingPrompt: (unitNumber) => ipcRenderer.invoke('db:getWritingPrompt', unitNumber),
 
   // Vocabulary
   getVocabDue: (limit) => ipcRenderer.invoke('db:getVocabDue', limit),
   getVocabStats: () => ipcRenderer.invoke('db:getVocabStats'),
   reviewVocab: (wordId, quality) => ipcRenderer.invoke('db:reviewVocab', wordId, quality),
   getVocabByTopic: () => ipcRenderer.invoke('db:getVocabByTopic'),
+
+  // Mistakes
+  logMistake: (exerciseId, userAnswer) => ipcRenderer.invoke('db:logMistake', exerciseId, userAnswer),
+  resolveMistake: (exerciseId) => ipcRenderer.invoke('db:resolveMistake', exerciseId),
+  getMistakes: (limit) => ipcRenderer.invoke('db:getMistakes', limit),
+  getMistakesCount: () => ipcRenderer.invoke('db:getMistakesCount'),
 }
 
 contextBridge.exposeInMainWorld('api', api)

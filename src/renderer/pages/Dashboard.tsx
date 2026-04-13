@@ -6,13 +6,14 @@ import PlacementTest from './PlacementTest'
 import Stats from './Stats'
 import Settings from './Settings'
 import Vocabulary from './Vocabulary'
+import MistakesReview from './MistakesReview'
 
 interface Props {
   settings: UserSettings
 }
 
 type Tab = 'home' | 'units' | 'vocab' | 'stats' | 'settings' | 'test'
-type View = 'tabs' | 'chapter' | 'test'
+type View = 'tabs' | 'chapter' | 'test' | 'mistakes'
 
 // CEFR level groups for the units tab
 const LEVEL_GROUPS: { level: string; label: string; range: string }[] = [
@@ -30,6 +31,7 @@ export default function Dashboard({ settings }: Props) {
   const [level, setLevel] = useState(settings.currentLevel)
   const [stats, setStats] = useState<StudyStats | null>(null)
   const [vocabStats, setVocabStats] = useState<VocabStats | null>(null)
+  const [mistakesCount, setMistakesCount] = useState(0)
   const [search, setSearch] = useState('')
   const { theme, toggleTheme } = useTheme()
   const { sessionSeconds } = useTimer()
@@ -42,6 +44,7 @@ export default function Dashboard({ settings }: Props) {
     })
     window.api.getStudyStats().then(setStats)
     window.api.getVocabStats().then(setVocabStats)
+    window.api.getMistakesCount().then(setMistakesCount)
   }, [settings.activeBookId])
 
   // Refresh stats when coming back to home
@@ -49,6 +52,13 @@ export default function Dashboard({ settings }: Props) {
     if (tab === 'home') {
       window.api.getStudyStats().then(setStats)
       window.api.getVocabStats().then(setVocabStats)
+      window.api.getMistakesCount().then(setMistakesCount)
+      // Re-fetch settings to pick up any focus-units changes
+      window.api.getSettings().then((s) => {
+        if (s.activeBookId) {
+          window.api.getCurriculum(s.activeBookId).then(setCurriculum)
+        }
+      })
     }
   }, [tab])
 
@@ -58,6 +68,10 @@ export default function Dashboard({ settings }: Props) {
 
   if (view === 'chapter' && activeChapterId !== null) {
     return <Chapter chapterId={activeChapterId} onBack={() => { setActiveChapterId(null); setView('tabs') }} />
+  }
+
+  if (view === 'mistakes') {
+    return <MistakesReview onBack={() => { setView('tabs'); window.api.getMistakesCount().then(setMistakesCount) }} />
   }
 
   if (tab === 'stats') return <Stats onBack={() => setTab('home')} />
@@ -71,8 +85,11 @@ export default function Dashboard({ settings }: Props) {
   const todayMin = (stats?.todayMinutes ?? 0) + sessionMin
   const goalProgress = Math.min(100, Math.round((todayMin / goalMin) * 100))
 
-  // Today's plan: next 3 incomplete units
-  const nextUnits = curriculum.filter((c) => !c.completed).slice(0, 3)
+  // Focus topics from settings
+  const focusSet = new Set(settings.focusUnits ?? [])
+  const focusTopics = curriculum.filter((c) => focusSet.has(c.unitNumber))
+  // Today's plan: next 3 incomplete units (excluding focus ones to avoid duplication)
+  const nextUnits = curriculum.filter((c) => !c.completed && !focusSet.has(c.unitNumber)).slice(0, 3)
   // Recently completed
   const recentDone = curriculum.filter((c) => c.completed).slice(-3).reverse()
 
@@ -87,6 +104,10 @@ export default function Dashboard({ settings }: Props) {
   function openUnit(chapterId: number) {
     setActiveChapterId(chapterId)
     setView('chapter')
+  }
+
+  function openMistakesReview() {
+    setView('mistakes')
   }
 
   return (
@@ -165,6 +186,76 @@ export default function Dashboard({ settings }: Props) {
                 </div>
               </div>
             </div>
+
+            {/* Focus Topics (weak areas from assessment) */}
+            {focusTopics.length > 0 && (
+              <div>
+                <h3 className="text-xs font-heading font-semibold text-orange-500 uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 23a7.5 7.5 0 0 0 7.5-7.5c0-4.5-3-7.5-4.5-9-1 2-2 3-3.5 3C10 9.5 9 7 8 4.5 6.5 7 4.5 10.5 4.5 15.5A7.5 7.5 0 0 0 12 23z"/></svg>
+                  Focus Topics — your weak spots
+                </h3>
+                <div className="space-y-2">
+                  {focusTopics.map((entry) => (
+                    <button
+                      type="button"
+                      key={entry.chapterId}
+                      onClick={() => openUnit(entry.chapterId)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all cursor-pointer
+                        ${entry.completed
+                          ? 'border-[--color-success] border-opacity-40 bg-[--color-success-bg]'
+                          : 'border-orange-400 bg-orange-50 dark:bg-orange-950 dark:border-orange-800 hover:border-orange-500'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center text-sm font-heading font-bold shrink-0">
+                          {entry.unitNumber}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-[--color-text] truncate">{entry.title}</p>
+                          <p className="text-[11px] text-[--color-text-faint]">
+                            {entry.cefrLevel}
+                            {entry.score !== null && entry.score >= 70 && <span className="text-[--color-success] ml-2">· mastered {entry.score}%</span>}
+                          </p>
+                        </div>
+                        {!entry.completed && (
+                          <span className="text-[10px] font-semibold bg-orange-500 text-white px-2 py-1 rounded-md shrink-0">
+                            Priority
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Mistakes to review */}
+            {mistakesCount > 0 && (
+              <button
+                type="button"
+                onClick={() => openMistakesReview()}
+                className="w-full bg-red-50 dark:bg-red-950 border-2 border-red-300 dark:border-red-800 rounded-xl p-4 text-left
+                           hover:border-red-500 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-red-500 bg-opacity-20 flex items-center justify-center shrink-0">
+                    <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-heading font-semibold text-[--color-text]">
+                      Review {mistakesCount} mistakes
+                    </p>
+                    <p className="text-[11px] text-[--color-text-faint] mt-0.5">
+                      Exercises you answered incorrectly — drill them to clear the list
+                    </p>
+                  </div>
+                  <svg className="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            )}
 
             {/* Next up — study plan */}
             {nextUnits.length > 0 && (

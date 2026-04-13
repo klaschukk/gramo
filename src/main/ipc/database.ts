@@ -16,6 +16,8 @@ import type {
   VocabStats,
 } from '../../shared/types'
 import { sm2, addDays, today } from '../services/spaced-repetition'
+import { getWritingPrompt } from '../services/writing-prompts'
+import type { WritingPrompt } from '../services/writing-prompts'
 
 // SQL column aliases to map snake_case → camelCase
 const CHAPTER_COLS = `id, book_id as bookId, unit_number as unitNumber, title, topic,
@@ -128,11 +130,17 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
       value: string
     }[]
     const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
+    let focusUnits: number[] = []
+    try {
+      focusUnits = map['focus_units'] ? JSON.parse(map['focus_units']) : []
+    } catch { focusUnits = [] }
     return {
       currentLevel: (map['current_level'] as CEFRLevel) ?? null,
       activeBookId: map['active_book_id'] ? parseInt(map['active_book_id']) : null,
       theme: (map['theme'] as 'light' | 'dark') ?? 'light',
       dailyGoalMinutes: map['daily_goal_minutes'] ? parseInt(map['daily_goal_minutes']) : 30,
+      focusUnits,
+      assessmentNotes: map['assessment_notes'] ?? null,
     }
   })
 
@@ -147,6 +155,8 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
         if (s.theme !== undefined) insert.run('theme', s.theme)
         if (s.dailyGoalMinutes !== undefined)
           insert.run('daily_goal_minutes', String(s.dailyGoalMinutes))
+        if (s.focusUnits !== undefined) insert.run('focus_units', JSON.stringify(s.focusUnits))
+        if (s.assessmentNotes !== undefined) insert.run('assessment_notes', s.assessmentNotes ?? '')
       })
       saveMany(settings)
     }
@@ -206,6 +216,10 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
     const db = getDb()
     const row = db.prepare('SELECT text FROM essays WHERE chapter_id = ?').get(chapterId) as { text: string } | undefined
     return row?.text ?? null
+  })
+
+  ipcMain.handle('db:getWritingPrompt', (_e, unitNumber: number): WritingPrompt => {
+    return getWritingPrompt(unitNumber)
   })
 
   // ===== Vocabulary with spaced repetition =====
@@ -303,6 +317,46 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
         last_review = excluded.last_review,
         lapses = excluded.lapses
     `).run(wordId, next.ease, next.interval, next.repetitions, nextReview, t, lapses)
+  })
+
+  // ===== Mistakes tracker =====
+  ipcMain.handle('db:logMistake', (_e, exerciseId: number, userAnswer: string): void => {
+    const db = getDb()
+    db.prepare(`
+      INSERT INTO mistakes (exercise_id, user_answer, attempts, last_wrong_at, resolved_at)
+      VALUES (?, ?, 1, datetime('now'), NULL)
+      ON CONFLICT(exercise_id) DO UPDATE SET
+        user_answer = excluded.user_answer,
+        attempts = attempts + 1,
+        last_wrong_at = datetime('now'),
+        resolved_at = NULL
+    `).run(exerciseId, userAnswer)
+  })
+
+  ipcMain.handle('db:resolveMistake', (_e, exerciseId: number): void => {
+    const db = getDb()
+    db.prepare("UPDATE mistakes SET resolved_at = datetime('now') WHERE exercise_id = ?").run(exerciseId)
+  })
+
+  ipcMain.handle('db:getMistakes', (_e, limit = 20): Exercise[] => {
+    const db = getDb()
+    const rows = db.prepare(`
+      SELECT ${EXERCISE_COLS}
+      FROM exercises
+      WHERE id IN (SELECT exercise_id FROM mistakes WHERE resolved_at IS NULL)
+      ORDER BY (SELECT last_wrong_at FROM mistakes WHERE mistakes.exercise_id = exercises.id) DESC
+      LIMIT ?
+    `).all(limit) as (Omit<Exercise, 'options'> & { options: string | null })[]
+    return rows.map((r) => ({
+      ...r,
+      options: r.options ? JSON.parse(r.options) : null,
+    }))
+  })
+
+  ipcMain.handle('db:getMistakesCount', (): number => {
+    const db = getDb()
+    const row = db.prepare('SELECT COUNT(*) as c FROM mistakes WHERE resolved_at IS NULL').get() as { c: number }
+    return row.c
   })
 
   ipcMain.handle('db:getVocabByTopic', (): { topic: string; total: number; learned: number }[] => {
