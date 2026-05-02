@@ -122,6 +122,7 @@ export interface CurriculumEntry {
   completed: boolean
   score: number | null
   unlocked: boolean
+  exerciseCount: number
 }
 
 export interface StudySession {
