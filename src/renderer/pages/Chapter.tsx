@@ -6,6 +6,9 @@ import SpeakButton from '../components/SpeakButton'
 interface Props {
   chapterId: number
   onBack: () => void
+  onNavigate?: (direction: 'prev' | 'next') => void
+  hasPrev?: boolean
+  hasNext?: boolean
 }
 
 interface Lesson {
@@ -17,7 +20,7 @@ interface Lesson {
 
 type View = 'content' | 'exercises' | 'writing'
 
-export default function Chapter({ chapterId, onBack }: Props) {
+export default function Chapter({ chapterId, onBack, onNavigate, hasPrev, hasNext }: Props) {
   const [chapter, setChapter] = useState<ChapterType | null>(null)
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [lesson, setLesson] = useState<Lesson | null>(null)
@@ -25,6 +28,8 @@ export default function Chapter({ chapterId, onBack }: Props) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    setLoading(true)
+    setLesson(null)
     Promise.all([
       window.api.getChapter(chapterId),
       window.api.getExercises(chapterId),
@@ -37,6 +42,23 @@ export default function Chapter({ chapterId, onBack }: Props) {
       setLoading(false)
     })
   }, [chapterId])
+
+  // Keyboard shortcuts: Esc=back, ←/→=prev/next unit, P=practice, W=write
+  useEffect(() => {
+    if (view !== 'content') return
+    function handleKey(e: KeyboardEvent) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
+      if (e.key === 'Escape') { onBack(); return }
+      if (e.key === 'ArrowLeft' && hasPrev && onNavigate) { onNavigate('prev'); return }
+      if (e.key === 'ArrowRight' && hasNext && onNavigate) { onNavigate('next'); return }
+      if ((e.key === 'p' || e.key === 'P') && exercises.length > 0) { setView('exercises'); return }
+      if (e.key === 'w' || e.key === 'W') { setView('writing'); return }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [view, hasPrev, hasNext, onNavigate, onBack, exercises.length])
 
   if (loading || !chapter) {
     return (
@@ -73,17 +95,49 @@ export default function Chapter({ chapterId, onBack }: Props) {
       {/* Header */}
       <header className="px-6 py-4 border-b border-[--color-border] bg-[--color-card]">
         <div className="max-w-2xl mx-auto">
-          <button
-            type="button"
-            title="Back"
-            onClick={onBack}
-            className="text-sm text-[--color-text-muted] hover:text-[--color-text] mb-3 flex items-center gap-1 cursor-pointer"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              title="Back to list (Esc)"
+              onClick={onBack}
+              className="text-sm text-[--color-text-muted] hover:text-[--color-text] flex items-center gap-1 cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            {onNavigate && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  title="Previous unit (←)"
+                  disabled={!hasPrev}
+                  onClick={() => onNavigate('prev')}
+                  className="w-7 h-7 rounded-lg border border-[--color-border] bg-[--color-muted]
+                             flex items-center justify-center cursor-pointer hover:border-[--color-border-hover]
+                             disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5 text-[--color-text-muted]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  title="Next unit (→)"
+                  disabled={!hasNext}
+                  onClick={() => onNavigate('next')}
+                  className="w-7 h-7 rounded-lg border border-[--color-border] bg-[--color-muted]
+                             flex items-center justify-center cursor-pointer hover:border-[--color-border-hover]
+                             disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5 text-[--color-text-muted]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-3 mb-1">
             <span className="text-xs font-mono text-[--color-text-faint]">Unit {chapter.unitNumber}</span>
             <span className="text-xs bg-[--color-level-bg] text-[--color-level-text] px-2 py-0.5 rounded">

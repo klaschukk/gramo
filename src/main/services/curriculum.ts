@@ -8,7 +8,8 @@ export function buildCurriculum(bookId: number, _userLevel: CEFRLevel): Curricul
   const chapters = db
     .prepare(
       `SELECT c.id, c.unit_number, c.title, c.cefr_level,
-              MAX(p.score) as best_score
+              MAX(p.score) as best_score,
+              (SELECT COUNT(*) FROM exercises e WHERE e.chapter_id = c.id) as exercise_count
        FROM chapters c
        LEFT JOIN user_progress p ON p.chapter_id = c.id AND p.exercise_id IS NULL
        WHERE c.book_id = ?
@@ -21,6 +22,7 @@ export function buildCurriculum(bookId: number, _userLevel: CEFRLevel): Curricul
     title: string
     cefr_level: CEFRLevel
     best_score: number | null
+    exercise_count: number
   }[]
 
   return chapters.map((chapter) => ({
@@ -31,5 +33,6 @@ export function buildCurriculum(bookId: number, _userLevel: CEFRLevel): Curricul
     completed: (chapter.best_score ?? 0) >= 70,
     score: chapter.best_score,
     unlocked: true,
+    exerciseCount: chapter.exercise_count,
   }))
 }
