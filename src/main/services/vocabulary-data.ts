@@ -5,11 +5,11 @@ export type VocabSeed = {
   word: string
   translation: string
   example: string
-  cefrLevel: 'A2' | 'B1' | 'B2'
+  cefrLevel: 'A2' | 'B1' | 'B2' | 'C1'
   topic: string
 }
 
-const rows: Array<[string, string, string, 'A2' | 'B1' | 'B2', string]> = [
+const rows: Array<[string, string, string, 'A2' | 'B1' | 'B2' | 'C1', string]> = [
   // ===== A2: EVERYDAY LIFE =====
   ['neighbour', 'сосед', 'My neighbour is a very kind person.', 'A2', 'people'],
   ['relative', 'родственник', 'I have many relatives in the south.', 'A2', 'people'],

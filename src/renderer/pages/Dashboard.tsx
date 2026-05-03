@@ -7,12 +7,13 @@ import Stats from './Stats'
 import Settings from './Settings'
 import Vocabulary from './Vocabulary'
 import MistakesReview from './MistakesReview'
+import Reading from './Reading'
 
 interface Props {
   settings: UserSettings
 }
 
-type Tab = 'home' | 'units' | 'vocab' | 'stats' | 'settings' | 'test'
+type Tab = 'home' | 'units' | 'vocab' | 'reading' | 'stats' | 'settings' | 'test'
 type View = 'tabs' | 'chapter' | 'test' | 'mistakes'
 
 // CEFR level groups for the units tab
@@ -22,13 +23,15 @@ const LEVEL_GROUPS: { level: string; label: string; range: string }[] = [
   { level: 'B2', label: 'Upper-Intermediate', range: 'Units 91-145' },
 ]
 
-export default function Dashboard({ settings }: Props) {
+export default function Dashboard({ settings: initialSettings }: Props) {
+  // Local copy of settings — refreshed when entering home, so Settings changes show up immediately
+  const [settings, setSettings] = useState<UserSettings>(initialSettings)
   const [curriculum, setCurriculum] = useState<CurriculumEntry[]>([])
   const [activeChapterId, setActiveChapterId] = useState<number | null>(null)
   const [view, setView] = useState<View>('tabs')
   const [tab, setTab] = useState<Tab>('home')
   const [loading, setLoading] = useState(true)
-  const [level, setLevel] = useState(settings.currentLevel)
+  const [level, setLevel] = useState(initialSettings.currentLevel)
   const [stats, setStats] = useState<StudyStats | null>(null)
   const [vocabStats, setVocabStats] = useState<VocabStats | null>(null)
   const [mistakesCount, setMistakesCount] = useState(0)
@@ -48,14 +51,16 @@ export default function Dashboard({ settings }: Props) {
     window.api.getMistakesCount().then(setMistakesCount)
   }, [settings.activeBookId])
 
-  // Refresh stats when coming back to home
+  // Refresh everything when coming back to home (settings, curriculum, stats)
   useEffect(() => {
     if (tab === 'home') {
       window.api.getStudyStats().then(setStats)
       window.api.getVocabStats().then(setVocabStats)
       window.api.getMistakesCount().then(setMistakesCount)
-      // Re-fetch settings to pick up any focus-units changes
+      // Re-fetch settings to pick up changes from Settings page (focus units, daily goal, level)
       window.api.getSettings().then((s) => {
+        setSettings(s)
+        if (s.currentLevel) setLevel(s.currentLevel)
         if (s.activeBookId) {
           window.api.getCurriculum(s.activeBookId).then(setCurriculum)
         }
@@ -70,7 +75,7 @@ export default function Dashboard({ settings }: Props) {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const target = e.target as HTMLElement | null
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
-      const tabMap: Record<string, Tab> = { '1': 'home', '2': 'units', '3': 'vocab', '4': 'stats', '5': 'settings' }
+      const tabMap: Record<string, Tab> = { '1': 'home', '2': 'units', '3': 'vocab', '4': 'reading', '5': 'stats', '6': 'settings' }
       const next = tabMap[e.key]
       if (next) { setTab(next); return }
       if (e.key === 't' || e.key === 'T') { toggleTheme(); return }
@@ -108,6 +113,7 @@ export default function Dashboard({ settings }: Props) {
   if (tab === 'stats') return <Stats onBack={() => setTab('home')} />
   if (tab === 'settings') return <Settings onBack={() => setTab('home')} />
   if (tab === 'vocab') return <Vocabulary onBack={() => setTab('home')} />
+  if (tab === 'reading') return <Reading onBack={() => setTab('home')} />
 
   const completed = curriculum.filter((c) => c.completed).length
   const total = curriculum.length
@@ -362,7 +368,19 @@ export default function Dashboard({ settings }: Props) {
             )}
 
             {/* Quick actions */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setTab('reading')}
+                className="bg-[--color-card] border border-[--color-border] rounded-xl p-4 text-left
+                           hover:border-[--color-primary] transition-colors cursor-pointer group"
+              >
+                <svg className="w-6 h-6 text-[--color-primary] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>
+                <p className="text-sm font-heading font-semibold text-[--color-text]">Reading</p>
+                <p className="text-[11px] text-[--color-text-faint] mt-0.5">IELTS-style passages</p>
+              </button>
               <button
                 type="button"
                 onClick={() => setView('test')}
@@ -373,7 +391,7 @@ export default function Dashboard({ settings }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-sm font-heading font-semibold text-[--color-text]">Level Test</p>
-                <p className="text-[11px] text-[--color-text-faint] mt-0.5">Full ability assessment</p>
+                <p className="text-[11px] text-[--color-text-faint] mt-0.5">Full assessment</p>
               </button>
               <button
                 type="button"
@@ -385,7 +403,7 @@ export default function Dashboard({ settings }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
                 <p className="text-sm font-heading font-semibold text-[--color-text]">All Units</p>
-                <p className="text-[11px] text-[--color-text-faint] mt-0.5">Browse 145 grammar topics</p>
+                <p className="text-[11px] text-[--color-text-faint] mt-0.5">145 topics</p>
               </button>
             </div>
 
@@ -515,8 +533,9 @@ export default function Dashboard({ settings }: Props) {
             { id: 'home' as Tab, label: 'Home', key: '1', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
             { id: 'units' as Tab, label: 'Units', key: '2', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
             { id: 'vocab' as Tab, label: 'Vocab', key: '3', icon: 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25' },
-            { id: 'stats' as Tab, label: 'Progress', key: '4', icon: 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z' },
-            { id: 'settings' as Tab, label: 'Settings', key: '5', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z' },
+            { id: 'reading' as Tab, label: 'Reading', key: '4', icon: 'M9 17l-3.5-3.5L4 15l5 5 12-12-1.5-1.5L9 17z' },
+            { id: 'stats' as Tab, label: 'Progress', key: '5', icon: 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z' },
+            { id: 'settings' as Tab, label: 'Settings', key: '6', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z' },
           ].map((item) => (
             <button
               key={item.id}

@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3'
 import path from 'path'
+import fs from 'fs'
 import { app } from 'electron'
 import { exercises as exercisesData } from './exercises-data'
 import { vocabularySeed } from './vocabulary-data'
@@ -13,8 +14,42 @@ export function getDb(): Database.Database {
   return db
 }
 
+// Daily auto-backup: copies gramo.db to backups/gramo-YYYY-MM-DD.db
+// Keeps 7 most recent backups, so prior week is always recoverable.
+function autoBackup(dbPath: string): void {
+  try {
+    if (!fs.existsSync(dbPath)) return
+    const backupDir = path.join(path.dirname(dbPath), 'backups')
+    if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true })
+
+    const today = new Date().toISOString().slice(0, 10)
+    const backupPath = path.join(backupDir, `gramo-${today}.db`)
+
+    // Skip if today's backup already exists
+    if (!fs.existsSync(backupPath)) {
+      fs.copyFileSync(dbPath, backupPath)
+      console.log(`DB backup created: ${backupPath}`)
+    }
+
+    // Keep only 7 most recent backups
+    const backups = fs.readdirSync(backupDir)
+      .filter((f) => f.startsWith('gramo-') && f.endsWith('.db'))
+      .sort()
+      .reverse()
+    for (const oldBackup of backups.slice(7)) {
+      fs.unlinkSync(path.join(backupDir, oldBackup))
+    }
+  } catch (err) {
+    console.error('DB backup failed:', err)
+  }
+}
+
 export function initDatabase(): void {
   const dbPath = path.join(app.getPath('userData'), 'gramo.db')
+
+  // Backup BEFORE opening — ensures we always have a safe copy before any migration
+  autoBackup(dbPath)
+
   db = new Database(dbPath)
 
   // Enable WAL mode for better performance
@@ -130,6 +165,13 @@ function runMigrations(db: Database.Database): void {
       attempts INTEGER NOT NULL DEFAULT 1,
       last_wrong_at TEXT NOT NULL DEFAULT (datetime('now')),
       resolved_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS reading_progress (
+      passage_id TEXT PRIMARY KEY,
+      score INTEGER NOT NULL DEFAULT 0,
+      total INTEGER NOT NULL DEFAULT 0,
+      completed_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `)
 
