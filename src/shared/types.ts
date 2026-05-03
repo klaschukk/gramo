@@ -183,4 +183,32 @@ export interface GramoAPI {
   resolveMistake: (exerciseId: number) => Promise<void>
   getMistakes: (limit?: number) => Promise<Exercise[]>
   getMistakesCount: () => Promise<number>
+
+  // Reading
+  getReadingPassages: () => Promise<ReadingPassageWithProgress[]>
+  getReadingPassage: (id: string) => Promise<ReadingPassage | null>
+  saveReadingProgress: (passageId: string, score: number, total: number) => Promise<void>
+}
+
+export type ReadingQuestion = {
+  type: 'multiple-choice' | 'true-false-notgiven' | 'fill-in-blank'
+  question: string
+  options?: string[]
+  answer: string
+  explanation: string
+}
+
+export type ReadingPassage = {
+  id: string
+  title: string
+  cefrLevel: 'B1' | 'B2' | 'C1'
+  topic: string
+  estimatedMinutes: number
+  text: string
+  questions: ReadingQuestion[]
+}
+
+export type ReadingPassageWithProgress = ReadingPassage & {
+  score: number | null
+  total: number | null
 }

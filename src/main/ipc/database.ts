@@ -18,6 +18,8 @@ import type {
 import { sm2, addDays, today } from '../services/spaced-repetition'
 import { getWritingPrompt } from '../services/writing-prompts'
 import type { WritingPrompt } from '../services/writing-prompts'
+import { readingPassages, getPassage } from '../services/reading-data'
+import type { ReadingPassage } from '../services/reading-data'
 
 // SQL column aliases to map snake_case → camelCase
 const CHAPTER_COLS = `id, book_id as bookId, unit_number as unitNumber, title, topic,
@@ -369,5 +371,32 @@ export function registerDatabaseHandlers(ipcMain: IpcMain): void {
       GROUP BY w.topic
       ORDER BY w.cefr_level, w.topic
     `).all() as { topic: string; total: number; learned: number }[]
+  })
+
+  // Reading passages
+  ipcMain.handle('db:getReadingPassages', (): (ReadingPassage & { score: number | null; total: number | null })[] => {
+    const db = getDb()
+    const progress = db.prepare('SELECT passage_id, score, total FROM reading_progress').all() as { passage_id: string; score: number; total: number }[]
+    const progressMap = new Map(progress.map((p) => [p.passage_id, p]))
+    return readingPassages.map((p) => {
+      const pr = progressMap.get(p.id)
+      return { ...p, score: pr?.score ?? null, total: pr?.total ?? null }
+    })
+  })
+
+  ipcMain.handle('db:getReadingPassage', (_e, id: string): ReadingPassage | null => {
+    return getPassage(id)
+  })
+
+  ipcMain.handle('db:saveReadingProgress', (_e, passageId: string, score: number, total: number): void => {
+    const db = getDb()
+    db.prepare(`
+      INSERT INTO reading_progress (passage_id, score, total, completed_at)
+      VALUES (?, ?, ?, datetime('now'))
+      ON CONFLICT(passage_id) DO UPDATE SET
+        score = MAX(score, excluded.score),
+        total = excluded.total,
+        completed_at = excluded.completed_at
+    `).run(passageId, score, total)
   })
 }

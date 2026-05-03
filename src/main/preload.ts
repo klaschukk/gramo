@@ -34,6 +34,11 @@ const api: GramoAPI = {
   resolveMistake: (exerciseId) => ipcRenderer.invoke('db:resolveMistake', exerciseId),
   getMistakes: (limit) => ipcRenderer.invoke('db:getMistakes', limit),
   getMistakesCount: () => ipcRenderer.invoke('db:getMistakesCount'),
+
+  // Reading
+  getReadingPassages: () => ipcRenderer.invoke('db:getReadingPassages'),
+  getReadingPassage: (id) => ipcRenderer.invoke('db:getReadingPassage', id),
+  saveReadingProgress: (passageId, score, total) => ipcRenderer.invoke('db:saveReadingProgress', passageId, score, total),
 }
 
 contextBridge.exposeInMainWorld('api', api)
