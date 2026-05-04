@@ -168,6 +168,99 @@ What is certain is that the pre-pandemic working world is not coming back. Wheth
   },
 ]
 
+readingPassages.push(
+  {
+    id: 'memory-and-place',
+    title: 'Memory and Place',
+    cefrLevel: 'C1',
+    topic: 'Psychology',
+    estimatedMinutes: 22,
+    text: `It is a peculiar feature of human cognition that our memories are so intimately bound up with the places in which they were formed. The smell of a school corridor, the particular angle of light in a childhood bedroom, the sound of a specific tram rattling through a city we no longer inhabit — all of these can summon recollections with a vividness that purely abstract reasoning rarely achieves. Cognitive scientists have long recognised this, but the precise mechanisms by which spatial context anchors memory remain an active area of research.
+
+The ancient Greeks were already aware of the phenomenon. Orators relied on the so-called "method of loci", in which speakers imagined walking through a familiar building and depositing pieces of information at successive locations. When the time came to deliver the speech, they would mentally retrace their route, gathering the items in sequence. Modern cognitive scientists have confirmed that this technique exploits a genuine property of the brain: the hippocampus, which plays a crucial role in memory formation, contains specialised "place cells" that encode spatial information.
+
+What is striking is how readily this mechanism is recruited even when no explicit mnemonic strategy is being used. Walk through a familiar city after a long absence, and memories you had not consciously retrieved for years can surface unbidden. This effect is so reliable that some psychologists have argued it offers therapeutic possibilities. Patients suffering from amnesia or early-stage dementia, when taken to places associated with significant life events, sometimes recover memories that seemed irrevocably lost.
+
+There are darker implications too. Trauma, like joy, can be encoded in place. People who have endured difficult experiences in particular locations may find those locations subsequently unbearable, even when the immediate threat has passed. Treating post-traumatic stress, accordingly, often involves either avoiding the original setting or, with care, gradually reintroducing the patient to it under therapeutic supervision.
+
+Architectural design has occasionally drawn on these insights, though somewhat unevenly. Memorials and museums dedicated to historical atrocities are often constructed with painstaking attention to spatial atmosphere, on the understanding that the space itself will do much of the cognitive and emotional work. The most successful examples — Berlin\'s Memorial to the Murdered Jews of Europe, for instance, or the Vietnam Veterans Memorial in Washington — produce effects that no amount of textual explanation could replicate.
+
+A further question concerns what happens when the places that anchor our memories disappear. Cities are demolished and rebuilt; family homes are sold; entire neighbourhoods are transformed beyond recognition. Some psychologists argue that this contributes to a particular form of grief, distinct from the loss of individual people, that comes from the dissolution of the physical settings of one\'s past. Whether digital reconstructions — virtual recreations of vanished places — can serve the same memorial function remains uncertain. Early evidence suggests they can evoke recognition but rarely the same quality of involuntary recall.
+
+What is clear is that to understand how humans remember, it is not enough to study the brain in isolation. Memory is a phenomenon distributed across mind, body and environment — and any account that ignores the role of place is necessarily incomplete.`,
+    questions: [
+      { type: 'multiple-choice', question: 'What ancient memory technique used spatial imagination?', options: ['The pen and paper method', 'The method of loci', 'The repetition method', 'The chunking method'], answer: 'The method of loci', explanation: '"Orators relied on the so-called \'method of loci\'."' },
+      { type: 'multiple-choice', question: 'Which brain region is mentioned as crucial for memory and contains place cells?', options: ['Cerebellum', 'Amygdala', 'Hippocampus', 'Cortex'], answer: 'Hippocampus', explanation: '"the hippocampus... contains specialised \'place cells\'."' },
+      { type: 'true-false-notgiven', question: 'Place-based memory recall only works with deliberate mnemonic strategies.', options: ['True', 'False', 'Not given'], answer: 'False', explanation: '"this mechanism is recruited even when no explicit mnemonic strategy is being used."' },
+      { type: 'multiple-choice', question: 'How can revisiting places help amnesia or dementia patients?', options: ['It cures their disease', 'It can recover apparently lost memories', 'It worsens their condition', 'It has no effect'], answer: 'It can recover apparently lost memories', explanation: '"sometimes recover memories that seemed irrevocably lost."' },
+      { type: 'true-false-notgiven', question: 'Traumatic memories are also tied to place.', options: ['True', 'False', 'Not given'], answer: 'True', explanation: '"Trauma, like joy, can be encoded in place."' },
+      { type: 'multiple-choice', question: 'Which two memorials are cited as successful examples?', options: ['The Eiffel Tower and Big Ben', 'Berlin Memorial and Vietnam Memorial', 'The Pantheon and the Colosseum', 'Tower Bridge and the Statue of Liberty'], answer: 'Berlin Memorial and Vietnam Memorial', explanation: '"Berlin\'s Memorial to the Murdered Jews of Europe... or the Vietnam Veterans Memorial."' },
+      { type: 'true-false-notgiven', question: 'Digital recreations of lost places fully substitute for physical ones.', options: ['True', 'False', 'Not given'], answer: 'False', explanation: '"Early evidence suggests they can evoke recognition but rarely the same quality of involuntary recall."' },
+      { type: 'fill-in-blank', question: 'According to the text, memory is distributed across mind, body and ___.', answer: 'environment', explanation: '"Memory is a phenomenon distributed across mind, body and environment."' },
+    ],
+  },
+  {
+    id: 'origins-of-pasta',
+    title: 'The Surprising Origins of Pasta',
+    cefrLevel: 'B2',
+    topic: 'History & Food',
+    estimatedMinutes: 18,
+    text: `Few foods are as closely associated with a single nation as pasta is with Italy. Yet the history of pasta is more complicated than the popular imagination would suggest, and the dish that millions now associate with Mediterranean cuisine has, in fact, a long and global history.
+
+A common myth holds that Marco Polo brought noodles back to Italy from China in the thirteenth century. While this story is widely repeated, food historians regard it as essentially a piece of twentieth-century marketing, with no support in the historical record. Pasta was being eaten in southern Italy long before Marco Polo set out on his travels. Arab traders, who occupied Sicily for around two hundred years from the ninth century onwards, almost certainly introduced techniques for drying pasta — a crucial development that allowed it to be stored for long periods and traded across distances.
+
+The dried-pasta industry that emerged in southern Italy was, by medieval standards, surprisingly industrial. Towns such as Naples and Genoa became major production centres, with hundreds of small workshops turning out vast quantities of macaroni and other shapes. The dry, breezy climate of these coastal regions was ideal for drying pasta, and the surrounding farmland produced the hard durum wheat best suited to its manufacture. By the seventeenth century, pasta was a staple food across much of Italy, though regional preparations varied widely.
+
+The accompaniment most familiar to modern eaters — tomato sauce — is a relative latecomer. Tomatoes, native to the Americas, were introduced to Europe only after the voyages of Columbus, and were initially regarded with suspicion. It took nearly two centuries before they were widely accepted as food, and longer still before they became standard with pasta. The classic combination of pasta and tomato sauce, now considered the essence of Italian cuisine, is in fact only about two hundred years old.
+
+Pasta\'s global spread accelerated dramatically in the late nineteenth and early twentieth centuries, as millions of Italians emigrated, particularly to the Americas. They brought their food traditions with them and, in doing so, transformed the eating habits of entire continents. The "Italian" pasta now eaten around the world is often, strictly speaking, an Italian-American adaptation, sometimes only loosely related to what Italians actually eat at home.
+
+In recent decades, pasta has been the subject of nutritional debates that would have surprised earlier generations. Once considered a wholesome staple, it is now frequently demonised in low-carbohydrate diets. Yet many dieticians point out that, eaten as part of a balanced Mediterranean diet — typically with vegetables, olive oil and modest portions — pasta is associated with longevity rather than ill health. The problem, they argue, is less with pasta itself than with how it is eaten elsewhere: in oversized portions, with heavy sauces and accompanied by inactivity.
+
+What is perhaps most remarkable about pasta is its capacity to absorb and reflect the cultures it encounters. Each region, each migration and each generation has reshaped it. The story of pasta is, in many ways, a story of how food carries history.`,
+    questions: [
+      { type: 'true-false-notgiven', question: 'Marco Polo introduced pasta to Italy from China.', options: ['True', 'False', 'Not given'], answer: 'False', explanation: '"food historians regard it as essentially a piece of twentieth-century marketing."' },
+      { type: 'multiple-choice', question: 'Who probably introduced pasta-drying techniques to Italy?', options: ['Romans', 'Arab traders in Sicily', 'Greek colonists', 'French monks'], answer: 'Arab traders in Sicily', explanation: '"Arab traders, who occupied Sicily for around two hundred years... almost certainly introduced techniques for drying pasta."' },
+      { type: 'multiple-choice', question: 'Why were southern Italian coastal regions ideal for pasta production?', options: ['Cold climate', 'Dry, breezy climate and durum wheat farms', 'Easy access to tomatoes', 'Large population'], answer: 'Dry, breezy climate and durum wheat farms', explanation: '"The dry, breezy climate... and the surrounding farmland produced the hard durum wheat."' },
+      { type: 'true-false-notgiven', question: 'Tomato sauce has been served with pasta for thousands of years.', options: ['True', 'False', 'Not given'], answer: 'False', explanation: '"The classic combination of pasta and tomato sauce... is in fact only about two hundred years old."' },
+      { type: 'fill-in-blank', question: 'Tomatoes are native to the ___.', answer: 'Americas', explanation: '"Tomatoes, native to the Americas, were introduced to Europe only after the voyages of Columbus."' },
+      { type: 'multiple-choice', question: 'How did pasta become global in the late 19th/early 20th century?', options: ['Through industrial revolution', 'Through Italian emigration', 'Through colonisation', 'Through trade with Asia'], answer: 'Through Italian emigration', explanation: '"as millions of Italians emigrated, particularly to the Americas."' },
+      { type: 'true-false-notgiven', question: 'Italian-Americans eat exactly the same pasta as people in Italy.', options: ['True', 'False', 'Not given'], answer: 'False', explanation: '"The \'Italian\' pasta now eaten around the world is often, strictly speaking, an Italian-American adaptation."' },
+      { type: 'multiple-choice', question: 'According to dieticians, what is the real problem with how pasta is eaten outside Italy?', options: ['Pasta itself is unhealthy', 'Oversized portions, heavy sauces, inactivity', 'It is cooked incorrectly', 'It contains harmful additives'], answer: 'Oversized portions, heavy sauces, inactivity', explanation: '"in oversized portions, with heavy sauces and accompanied by inactivity."' },
+    ],
+  },
+  {
+    id: 'attention-economy',
+    title: 'The Attention Economy',
+    cefrLevel: 'C1',
+    topic: 'Technology & Society',
+    estimatedMinutes: 22,
+    text: `In a famous lecture delivered in 1971, the social scientist Herbert Simon observed that, in a world rich in information, the scarce resource is no longer information itself but the attention required to consume it. He could not have foreseen quite how prophetic this observation would prove. Today, the so-called "attention economy" — in which platforms compete to capture and monetise our limited attention — is one of the defining features of contemporary life, with consequences that range from the trivial to the deeply disruptive.
+
+The mechanics are by now familiar. Most major social media services are funded by advertising, and the more time users spend on a platform, the more advertising the platform can sell. Engagement, accordingly, has become the central metric. Algorithms are tuned not to deliver what users have explicitly requested, nor what is necessarily good for them, but to maximise the time they spend scrolling, watching and reacting. Considerable engineering and behavioural-science expertise has been deployed in pursuit of this aim.
+
+The results, in narrow terms, have been spectacular. The average smartphone user now picks up their device dozens of times a day; some studies put the figure well above one hundred. Time spent on social media globally now exceeds two hours a day on average, and far more for younger users. Whole industries — from journalism to politics to retail — have reorganised themselves around the imperatives of capturing fragments of this attention.
+
+Yet the costs are increasingly difficult to ignore. Studies link heavy social-media use, especially in adolescents, to heightened rates of anxiety and depression, though the precise causal pathways remain contested. Concentration spans appear to be shortening, with implications for education and creative work. Public discourse has become noisier and more emotionally polarised, partly because the algorithms that drive attention favour content that provokes strong reactions over content that is informative or balanced.
+
+Some critics frame the issue in moral terms, arguing that the deliberate engineering of compulsive behaviour — particularly when directed at children — is fundamentally exploitative. Others take a more structural view, suggesting that the problem lies not with individual platforms but with a business model that aligns commercial success with psychological harm. On this analysis, asking individual users to exercise more self-discipline misses the point: the systems are designed to exploit predictable cognitive vulnerabilities, and very few users can be expected to resist them consistently.
+
+Responses have been varied. Some governments are exploring regulatory limits, particularly for users under sixteen. Schools have begun banning smartphones during lessons, with reports of marked improvements in concentration and social interaction. Within the technology industry, a small but growing movement of designers has begun to advocate for what is sometimes called "humane technology" — products optimised for users\' wellbeing rather than for their attention.
+
+What ultimately becomes of the attention economy will depend on choices made over the next decade. Whether the dominant platforms can be reformed from within, whether new business models can emerge, and whether public regulation can keep pace with rapidly changing technologies — none of these questions has a settled answer. But it seems increasingly clear that treating attention as just another commodity to be harvested without limit comes with social costs that even the most ardent enthusiasts of the present system are now finding difficult to dismiss.`,
+    questions: [
+      { type: 'multiple-choice', question: 'According to Herbert Simon, what is the truly scarce resource in an information-rich world?', options: ['Money', 'Information itself', 'Attention', 'Time'], answer: 'Attention', explanation: '"the scarce resource is no longer information itself but the attention required to consume it."' },
+      { type: 'multiple-choice', question: 'How are most major social media services funded?', options: ['Subscriptions', 'Government grants', 'Advertising', 'Donations'], answer: 'Advertising', explanation: '"Most major social media services are funded by advertising."' },
+      { type: 'true-false-notgiven', question: 'Algorithms are designed to deliver only what users explicitly request.', options: ['True', 'False', 'Not given'], answer: 'False', explanation: '"Algorithms are tuned not to deliver what users have explicitly requested... but to maximise the time they spend."' },
+      { type: 'multiple-choice', question: 'Which type of content do attention algorithms tend to favour?', options: ['Balanced and informative', 'Emotionally provocative', 'Long-form articles', 'Educational videos'], answer: 'Emotionally provocative', explanation: '"the algorithms that drive attention favour content that provokes strong reactions."' },
+      { type: 'true-false-notgiven', question: 'The link between heavy social media use and depression in teenagers is fully understood.', options: ['True', 'False', 'Not given'], answer: 'False', explanation: '"the precise causal pathways remain contested."' },
+      { type: 'fill-in-blank', question: 'A growing movement of designers advocates for "___ technology".', answer: 'humane', explanation: '"a small but growing movement of designers has begun to advocate for what is sometimes called \'humane technology\'."' },
+      { type: 'multiple-choice', question: 'According to structural critics, individual self-discipline is:', options: ['The only solution', 'Insufficient because systems exploit cognitive vulnerabilities', 'Easy to develop', 'Unnecessary'], answer: 'Insufficient because systems exploit cognitive vulnerabilities', explanation: '"the systems are designed to exploit predictable cognitive vulnerabilities, and very few users can be expected to resist them consistently."' },
+      { type: 'true-false-notgiven', question: 'Schools have reported improved concentration after banning smartphones during lessons.', options: ['True', 'False', 'Not given'], answer: 'True', explanation: '"with reports of marked improvements in concentration and social interaction."' },
+    ],
+  }
+)
+
 export function getPassage(id: string): ReadingPassage | null {
   return readingPassages.find((p) => p.id === id) ?? null
 }
