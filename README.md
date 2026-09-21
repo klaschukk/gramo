@@ -1,14 +1,6 @@
-<div align="center">
+<a href="https://github.com/klaschukk/gramo"><img src="docs/banner.svg" alt="Gramo — learn English grammar the Cambridge way" width="100%"></a>
 
-<img src="assets/icon.svg" alt="Gramo" width="96">
-
-# Gramo
-
-**Learn English grammar the Cambridge way — from your own textbook.**
-
-Import a textbook PDF, take a placement test and work through it chapter by chapter, offline.
-
-</div>
+**Import your textbook PDF, take a placement test and work through it chapter by chapter, offline.**
 
 ## Features
 
